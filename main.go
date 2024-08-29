@@ -1,7 +1,8 @@
 package main
 
 import (
-	"log"
+    "fmt"
+    "log"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -31,6 +32,7 @@ func NewGame() *Game {
 func (g *Game) Update() error {
 	g.inputHandler.HandleInput(g.world)
 	g.world.Update()
+	fmt.Println(g.world.GetPlayerCharacter())
 	g.camera.Update(g.world.GetPlayerCharacter())
 	return nil
 }
@@ -44,11 +46,9 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 }
 
 func main() {
-	game := NewGame()
 	ebiten.SetWindowSize(640, 480)
 	ebiten.SetWindowTitle("My 2D Top-Down Game")
-	if err := ebiten.RunGame(game); err != nil {
+	if err := ebiten.RunGame(NewGame()); err != nil {
 		log.Fatal(err)
 	}
 }
-

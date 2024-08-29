@@ -1,8 +1,10 @@
 package main
 
-import "github.com/hajimehoshi/ebiten/v2"
+import (
+	"github.com/hajimehoshi/ebiten/v2"
+)
 
-type InputHandler struct {}
+type InputHandler struct{}
 
 func NewInputHandler() *InputHandler {
 	return &InputHandler{}
@@ -14,16 +16,21 @@ func (ih *InputHandler) HandleInput(world *World) {
 		return
 	}
 
+	dx, dy := 0.0, 0.0
+
 	if ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
-		player.Move(-1, 0, world)
+		dx -= 1
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyArrowRight) {
-		player.Move(1, 0, world)
+		dx += 1
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
-		player.Move(0, -1, world)
+		dy -= 1
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
-		player.Move(0, 1, world)
+		dy += 1
 	}
+
+	player.Move(dx, dy, world)
 }
+

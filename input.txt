@@ -1,3 +1,90 @@
+// input_handler.go
+package main
+
+import (
+	"github.com/hajimehoshi/ebiten/v2"
+)
+
+type InputHandler struct{}
+
+func NewInputHandler() *InputHandler {
+	return &InputHandler{}
+}
+
+func (ih *InputHandler) HandleInput(world *World) {
+	player := world.GetPlayerCharacter()
+	if player == nil {
+		return
+	}
+
+	dx, dy := 0.0, 0.0
+
+	if ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
+		dx -= 1
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyArrowRight) {
+		dx += 1
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
+		dy -= 1
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
+		dy += 1
+	}
+
+	player.Move(dx, dy, world)
+}
+
+// character.go
+package main
+
+import (
+	"math"
+)
+
+type Character struct {
+	X, Y     float64
+	Name     string
+	Speed    float64
+	IsPlayer bool
+}
+
+func NewCharacter(x, y float64, name string) Character {
+	return Character{
+		X:        x,
+		Y:        y,
+		Name:     name,
+		Speed:    2.0,
+		IsPlayer: name == "Player",
+	}
+}
+
+func (c *Character) Update(w *World) {
+	// Update character logic
+	// This could include AI for NPCs, or be empty for the player character
+	// as their movement is handled by input
+}
+
+func (c *Character) Move(dx, dy float64, w *World) {
+	// Normalize diagonal movement
+	if dx != 0 && dy != 0 {
+		magnitude := math.Sqrt(dx*dx + dy*dy)
+		dx /= magnitude
+		dy /= magnitude
+	}
+
+	newX := c.X + dx*c.Speed
+	newY := c.Y + dy*c.Speed
+
+	// Simple collision detection with game boundaries
+	if newX >= 0 && newX < float64(w.gameMap.Width) {
+		c.X = newX
+	}
+	if newY >= 0 && newY < float64(w.gameMap.Height) {
+		c.Y = newY
+	}
+}
+
 // main.go
 package main
 
@@ -5,6 +92,7 @@ import (
 	"log"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"image/color"
 )
 
 type Game struct {
@@ -45,177 +133,9 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 }
 
 func main() {
-	game := NewGame()
 	ebiten.SetWindowSize(640, 480)
 	ebiten.SetWindowTitle("My 2D Top-Down Game")
-	if err := ebiten.RunGame(game); err != nil {
+	if err := ebiten.RunGame(NewGame()); err != nil {
 		log.Fatal(err)
-	}
-}
-
-// world.go
-type World struct {
-	characters []Character
-	monsters   []Monster
-	map        *GameMap
-}
-
-func NewWorld() *World {
-	return &World{
-		characters: make([]Character, 0),
-		monsters:   make([]Monster, 0),
-		map:        NewGameMap(),
-	}
-}
-
-func (w *World) Update() {
-	for i := range w.characters {
-		w.characters[i].Update(w)
-	}
-	for i := range w.monsters {
-		w.monsters[i].Update(w)
-	}
-}
-
-func (w *World) AddCharacter(c Character) {
-	w.characters = append(w.characters, c)
-}
-
-func (w *World) GetCharacters() []Character {
-	return w.characters
-}
-
-func (w *World) GetPlayerCharacter() *Character {
-	// Assuming the first character is always the player
-	if len(w.characters) > 0 {
-		return &w.characters[0]
-	}
-	return nil
-}
-
-// character.go
-type Character struct {
-	X, Y        float64
-	Name        string
-	Speed       float64
-	IsPlayer    bool
-}
-
-func NewCharacter(x, y float64, name string) Character {
-	return Character{
-		X:     x,
-		Y:     y,
-		Name:  name,
-		Speed: 2.0,
-		IsPlayer: name == "Player",
-	}
-}
-
-func (c *Character) Update(w *World) {
-	// Update character logic
-	// This could include AI for NPCs, or be empty for the player character
-	// as their movement is handled by input
-}
-
-func (c *Character) Move(dx, dy float64, w *World) {
-	newX := c.X + dx*c.Speed
-	newY := c.Y + dy*c.Speed
-
-	// Simple collision detection with map boundaries
-	if newX >= 0 && newX < float64(w.map.Width) {
-		c.X = newX
-	}
-	if newY >= 0 && newY < float64(w.map.Height) {
-		c.Y = newY
-	}
-}
-
-// monster.go
-type Monster struct {
-	X, Y float64
-	// Add other properties
-}
-
-func (m *Monster) Update(w *World) {
-	// Update monster logic
-}
-
-// map.go
-type GameMap struct {
-	Tiles  [][]int
-	Width  int
-	Height int
-}
-
-func NewGameMap() *GameMap {
-	width, height := 50, 50
-	tiles := make([][]int, height)
-	for i := range tiles {
-		tiles[i] = make([]int, width)
-	}
-	return &GameMap{
-		Tiles:  tiles,
-		Width:  width,
-		Height: height,
-	}
-}
-
-// camera.go
-type Camera struct {
-	X, Y float64
-}
-
-func NewCamera() *Camera {
-	return &Camera{}
-}
-
-func (c *Camera) Update(player *Character) {
-	if player != nil {
-		c.X = player.X - 320 // Assuming 640x480 screen
-		c.Y = player.Y - 240
-	}
-}
-
-// renderer.go
-type Renderer struct {}
-
-func NewRenderer() *Renderer {
-	return &Renderer{}
-}
-
-func (r *Renderer) Render(screen *ebiten.Image, world *World, camera *Camera) {
-	// Implement rendering logic
-	// Draw map
-	// Draw characters
-	for _, char := range world.GetCharacters() {
-		// Draw character at (char.X - camera.X, char.Y - camera.Y)
-	}
-	// Draw monsters
-}
-
-// input_handler.go
-type InputHandler struct {}
-
-func NewInputHandler() *InputHandler {
-	return &InputHandler{}
-}
-
-func (ih *InputHandler) HandleInput(world *World) {
-	player := world.GetPlayerCharacter()
-	if player == nil {
-		return
-	}
-
-	if ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
-		player.Move(-1, 0, world)
-	}
-	if ebiten.IsKeyPressed(ebiten.KeyArrowRight) {
-		player.Move(1, 0, world)
-	}
-	if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
-		player.Move(0, -1, world)
-	}
-	if ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
-		player.Move(0, 1, world)
 	}
 }

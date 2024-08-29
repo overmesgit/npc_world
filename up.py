@@ -11,7 +11,7 @@ def extract_and_update_files(input_file):
                 f.write(''.join(current_content))
             print(f"Updated/Created: {current_file}")
         current_file = None
-        current_content = ['package main\n']
+        current_content = []
 
     with open(input_file, 'r') as f:
         for line in f:
