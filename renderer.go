@@ -39,10 +39,10 @@ func (r *Renderer) Render(screen *ebiten.Image, world *World, camera *Camera) {
     // Clear the screen
     screen.Fill(color.RGBA{135, 206, 235, 255}) // Sky blue background
 
-    // Draw game map (placeholder)
+    // Draw game map
     for y := 0; y < world.gameMap.Height; y++ {
         for x := 0; x < world.gameMap.Width; x++ {
-            r.drawTile(screen, x, y, camera)
+            r.drawTile(screen, x, y, world.gameMap.Tiles[y][x], camera)
         }
     }
 
@@ -52,15 +52,16 @@ func (r *Renderer) Render(screen *ebiten.Image, world *World, camera *Camera) {
     }
 }
 
-func (r *Renderer) drawTile(screen *ebiten.Image, x, y int, camera *Camera) {
-    // Placeholder: Draw a simple grid
-    tileColor := color.RGBA{200, 200, 200, 255} // Light gray
-    ebitenutil.DrawRect(screen,
-        float64(x*TileSize)-camera.X,
-        float64(y*TileSize)-camera.Y,
-        float64(TileSize),
-        float64(TileSize),
-        tileColor)
+func (r *Renderer) drawTile(screen *ebiten.Image, x, y int, tileType TileType, camera *Camera) {
+    screenX := float64(x*TileSize) - camera.X
+    screenY := float64(y*TileSize) - camera.Y
+
+    switch tileType {
+    case TileGrass:
+        ebitenutil.DrawRect(screen, screenX, screenY, float64(TileSize), float64(TileSize), color.RGBA{34, 139, 34, 255}) // Forest green
+    case TileMountain:
+        ebitenutil.DrawRect(screen, screenX, screenY, float64(TileSize), float64(TileSize), color.RGBA{139, 69, 19, 255}) // Saddle brown
+    }
 }
 
 func (r *Renderer) drawCharacter(screen *ebiten.Image, char *Character, camera *Camera) {
