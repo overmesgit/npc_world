@@ -16,10 +16,10 @@ type Game struct {
 
 func NewGame() *Game {
 	world := NewWorld()
-	// Create some initial characters
-	world.AddCharacter(NewCharacter(100, 100, "Player"))
-	world.AddCharacter(NewCharacter(200, 200, "NPC1"))
-	world.AddCharacter(NewCharacter(300, 300, "NPC2"))
+	// Create some initial characters (now using tile coordinates)
+	world.AddCharacter(NewCharacter(float64(3*TileSize), float64(3*TileSize), "Player"))
+	world.AddCharacter(NewCharacter(float64(6*TileSize), float64(6*TileSize), "NPC1"))
+	world.AddCharacter(NewCharacter(float64(9*TileSize), float64(9*TileSize), "NPC2"))
 
 	return &Game{
 		world:        world,
@@ -32,7 +32,6 @@ func NewGame() *Game {
 func (g *Game) Update() error {
 	g.inputHandler.HandleInput(g.world)
 	g.world.Update()
-	fmt.Println(g.world.GetPlayerCharacter())
 	g.camera.Update(g.world.GetPlayerCharacter())
 	return nil
 }

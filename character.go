@@ -1,8 +1,7 @@
 package main
 
 import (
-    "fmt"
-    "math"
+	"math"
 )
 
 type Character struct {
@@ -24,8 +23,6 @@ func NewCharacter(x, y float64, name string) Character {
 
 func (c *Character) Update(w *World) {
 	// Update character logic
-	// This could include AI for NPCs, or be empty for the player character
-	// as their movement is handled by input
 }
 
 func (c *Character) Move(dx, dy float64, w *World) {
@@ -38,14 +35,12 @@ func (c *Character) Move(dx, dy float64, w *World) {
 
 	newX := c.X + dx*c.Speed
 	newY := c.Y + dy*c.Speed
-	fmt.Println(newX, newY)
-	c.X = newX
-	c.Y = newY
-	// Simple collision detection with game boundaries
-	if newX >= 0 && newX < float64(w.gameMap.Width) {
+
+	// Collision detection with game boundaries
+	if newX >= 0 && newX < float64(w.gameMap.Width*TileSize) {
 		c.X = newX
 	}
-	if newY >= 0 && newY < float64(w.gameMap.Height) {
+	if newY >= 0 && newY < float64(w.gameMap.Height*TileSize) {
 		c.Y = newY
 	}
 }

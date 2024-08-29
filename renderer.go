@@ -45,21 +45,22 @@ func (r *Renderer) Render(screen *ebiten.Image, world *World, camera *Camera) {
 }
 
 func (r *Renderer) drawCharacter(screen *ebiten.Image, char *Character, camera *Camera) {
-    // Character size
-    const charSize = 20
+	// Character size (now using TileSize)
+	charSize := TileSize
 
-    // Calculate screen position
-    screenX := char.X - camera.X
-    screenY := char.Y - camera.Y
+	// Calculate screen position
+	screenX := char.X - camera.X
+	screenY := char.Y - camera.Y
 
-    // Draw green square
-    square := ebiten.NewImage(charSize, charSize)
-    square.Fill(color.RGBA{0, 255, 0, 255})
+	// Draw green square
+	square := ebiten.NewImage(charSize, charSize)
+	square.Fill(color.RGBA{0, 255, 0, 255})
 
-    op := &ebiten.DrawImageOptions{}
-    op.GeoM.Translate(screenX, screenY)
-    screen.DrawImage(square, op)
+	op := &ebiten.DrawImageOptions{}
+	op.GeoM.Translate(screenX, screenY)
+	screen.DrawImage(square, op)
 
-    // Draw character name
-    text.Draw(screen, char.Name, r.font, int(screenX), int(screenY)-5, color.White)
+	// Draw character name
+	text.Draw(screen, char.Name, r.font, int(screenX), int(screenY)-5, color.White)
 }
+
