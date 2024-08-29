@@ -1,13 +1,29 @@
 package main
 
+import "github.com/hajimehoshi/ebiten/v2"
 
-// input_handler.go
 type InputHandler struct {}
 
 func NewInputHandler() *InputHandler {
 	return &InputHandler{}
 }
 
-func (ih *InputHandler) HandleInput() {
-	// Handle user input
+func (ih *InputHandler) HandleInput(world *World) {
+	player := world.GetPlayerCharacter()
+	if player == nil {
+		return
+	}
+
+	if ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
+		player.Move(-1, 0, world)
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyArrowRight) {
+		player.Move(1, 0, world)
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
+		player.Move(0, -1, world)
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
+		player.Move(0, 1, world)
+	}
 }

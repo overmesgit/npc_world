@@ -1,12 +1,20 @@
 package main
-
-// map.go
 type GameMap struct {
-	Tiles [][]int
-	// Add other map properties
+	Tiles  [][]int
+	Width  int
+	Height int
 }
 
 func NewGameMap() *GameMap {
-	// Initialize map
-	return &GameMap{}
+	width, height := 50, 50
+	tiles := make([][]int, height)
+	for i := range tiles {
+		tiles[i] = make([]int, width)
+	}
+	return &GameMap{
+		Tiles:  tiles,
+		Width:  width,
+		Height: height,
+	}
 }
+

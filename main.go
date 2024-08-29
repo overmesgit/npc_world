@@ -1,4 +1,3 @@
-// main.go
 package main
 
 import (
@@ -8,25 +7,31 @@ import (
 )
 
 type Game struct {
-	world     *World
-	camera    *Camera
-	renderer  *Renderer
+	world        *World
+	camera       *Camera
+	renderer     *Renderer
 	inputHandler *InputHandler
 }
 
 func NewGame() *Game {
+	world := NewWorld()
+	// Create some initial characters
+	world.AddCharacter(NewCharacter(100, 100, "Player"))
+	world.AddCharacter(NewCharacter(200, 200, "NPC1"))
+	world.AddCharacter(NewCharacter(300, 300, "NPC2"))
+
 	return &Game{
-		world:     NewWorld(),
-		camera:    NewCamera(),
-		renderer:  NewRenderer(),
+		world:        world,
+		camera:       NewCamera(),
+		renderer:     NewRenderer(),
 		inputHandler: NewInputHandler(),
 	}
 }
 
 func (g *Game) Update() error {
-	g.inputHandler.HandleInput()
+	g.inputHandler.HandleInput(g.world)
 	g.world.Update()
-	g.camera.Update()
+	g.camera.Update(g.world.GetPlayerCharacter())
 	return nil
 }
 
@@ -46,5 +51,4 @@ func main() {
 		log.Fatal(err)
 	}
 }
-
 
