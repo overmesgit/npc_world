@@ -2,6 +2,8 @@ package main
 
 import (
 	"math"
+
+	"github.com/hajimehoshi/ebiten/v2"
 )
 
 type Character struct {
@@ -9,15 +11,17 @@ type Character struct {
 	Name     string
 	Speed    float64
 	IsPlayer bool
+	Sprite   *ebiten.Image
 }
 
-func NewCharacter(x, y float64, name string) Character {
+func NewCharacter(x, y float64, name string, sprite *ebiten.Image) Character {
 	return Character{
 		X:        x,
 		Y:        y,
 		Name:     name,
 		Speed:    2.0,
 		IsPlayer: name == "Player",
+		Sprite:   sprite,
 	}
 }
 

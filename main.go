@@ -1,7 +1,7 @@
 package main
 
 import (
-    "fmt"
+    "github.com/hajimehoshi/ebiten/v2/ebitenutil"
     "log"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -14,12 +14,24 @@ type Game struct {
 	inputHandler *InputHandler
 }
 
+
 func NewGame() *Game {
 	world := NewWorld()
-	// Create some initial characters (now using tile coordinates)
-	world.AddCharacter(NewCharacter(float64(3*TileSize), float64(3*TileSize), "Player"))
-	world.AddCharacter(NewCharacter(float64(6*TileSize), float64(6*TileSize), "NPC1"))
-	world.AddCharacter(NewCharacter(float64(9*TileSize), float64(9*TileSize), "NPC2"))
+
+	// Load sprites
+	playerSprite, _, err := ebitenutil.NewImageFromFile("assets/tile_0_0.png")
+	if err != nil {
+		log.Fatal(err)
+	}
+	npcSprite, _, err := ebitenutil.NewImageFromFile("assets/tile_0_1.png")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Create characters with sprites
+	world.AddCharacter(NewCharacter(float64(3*TileSize), float64(3*TileSize), "Player", playerSprite))
+	world.AddCharacter(NewCharacter(float64(6*TileSize), float64(6*TileSize), "NPC1", npcSprite))
+	world.AddCharacter(NewCharacter(float64(9*TileSize), float64(9*TileSize), "NPC2", npcSprite))
 
 	return &Game{
 		world:        world,
@@ -28,6 +40,7 @@ func NewGame() *Game {
 		inputHandler: NewInputHandler(),
 	}
 }
+
 
 func (g *Game) Update() error {
 	g.inputHandler.HandleInput(g.world)
