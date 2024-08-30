@@ -1,6 +1,7 @@
 package main
 
 import (
+    "github.com/hajimehoshi/ebiten/v2"
     "math/rand"
     "time"
 )
@@ -10,37 +11,39 @@ type World struct {
     monsters         []*Monster
     gameMap          *GameMap
     lastMonsterSpawn time.Time
+    monsterSprite    *ebiten.Image
 }
 
-func NewWorld() *World {
+func NewWorld(monsterSprite *ebiten.Image) *World {
     return &World{
         characters:       make([]Character, 0),
         monsters:         make([]*Monster, 0),
         gameMap:          NewGameMap(),
         lastMonsterSpawn: time.Now(),
+        monsterSprite:    monsterSprite,
     }
 }
 
 func (w *World) Update() {
-	for i := range w.characters {
-		w.characters[i].Update(w)
-	}
+    for i := range w.characters {
+        w.characters[i].Update(w)
+    }
 
-	// Update monsters and remove dead ones
-	aliveMonsters := make([]*Monster, 0)
-	for _, monster := range w.monsters {
-		monster.Update(w)
-		if monster.Health > 0 {
-			aliveMonsters = append(aliveMonsters, monster)
-		}
-	}
-	w.monsters = aliveMonsters
+    // Update monsters and remove dead ones
+    aliveMonsters := make([]*Monster, 0)
+    for _, monster := range w.monsters {
+        monster.Update(w)
+        if monster.Health > 0 {
+            aliveMonsters = append(aliveMonsters, monster)
+        }
+    }
+    w.monsters = aliveMonsters
 
-	// Spawn new monster every 10 seconds
-	if time.Since(w.lastMonsterSpawn) > 10*time.Second {
-		w.SpawnMonster()
-		w.lastMonsterSpawn = time.Now()
-	}
+    // Spawn new monster every 10 seconds
+    if time.Since(w.lastMonsterSpawn) > 10*time.Second {
+        w.SpawnMonster()
+        w.lastMonsterSpawn = time.Now()
+    }
 }
 
 func (w *World) SpawnMonster() {
@@ -52,7 +55,7 @@ func (w *World) SpawnMonster() {
         x := centerX + (rand.Float64()*10-5)*TileSize
         y := centerY + (rand.Float64()*10-5)*TileSize
         if w.gameMap.IsTileWalkable(int(x/TileSize), int(y/TileSize)) {
-            monster := NewMonster(x, y)
+            monster := NewMonster(x, y, w.monsterSprite)
             monster.NormalizeDirection() // Ensure the initial direction is normalized
             w.monsters = append(w.monsters, monster)
             return

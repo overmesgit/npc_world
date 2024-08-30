@@ -15,15 +15,20 @@ type Game struct {
 }
 
 func NewGame() *Game {
-    world := NewWorld()
+    monsterSprite, _, err := ebitenutil.NewImageFromFile("assets/monsters/tile_0_0.png")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	world := NewWorld(monsterSprite)
     world.gameMap.AddRandomFeatures()
 
     // Load sprites
-    playerSprite, _, err := ebitenutil.NewImageFromFile("assets/tile_0_0.png")
+    playerSprite, _, err := ebitenutil.NewImageFromFile("assets/rogues/tile_0_0.png")
     if err != nil {
         log.Fatal(err)
     }
-    npcSprite, _, err := ebitenutil.NewImageFromFile("assets/tile_0_1.png")
+    npcSprite, _, err := ebitenutil.NewImageFromFile("assets/rogues/tile_0_1.png")
     if err != nil {
         log.Fatal(err)
     }

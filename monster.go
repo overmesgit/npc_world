@@ -1,6 +1,7 @@
 package main
 
 import (
+    "github.com/hajimehoshi/ebiten/v2"
     "math"
     "math/rand"
 )
@@ -13,9 +14,10 @@ type Monster struct {
     Direction struct{ X, Y float64 }
     Health    int
     MaxHealth int
+    Sprite    *ebiten.Image
 }
 
-func NewMonster(x, y float64) *Monster {
+func NewMonster(x, y float64, sprite *ebiten.Image) *Monster {
     return &Monster{
         X:      x,
         Y:      y,
@@ -28,6 +30,7 @@ func NewMonster(x, y float64) *Monster {
         },
         Health:    100,
         MaxHealth: 100,
+        Sprite:    sprite,
     }
 }
 

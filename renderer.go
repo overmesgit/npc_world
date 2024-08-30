@@ -59,24 +59,26 @@ func (r *Renderer) Render(screen *ebiten.Image, world *World, camera *Camera) {
 }
 
 func (r *Renderer) drawMonster(screen *ebiten.Image, monster *Monster, camera *Camera) {
-	screenX := monster.X - camera.X
-	screenY := monster.Y - camera.Y
+    screenX := monster.X - camera.X
+    screenY := monster.Y - camera.Y
 
-	// Draw monster as a red square
-	ebitenutil.DrawRect(screen, screenX, screenY, monster.Width, monster.Height, color.RGBA{255, 0, 0, 255})
+    // Draw monster sprite
+    op := &ebiten.DrawImageOptions{}
+    op.GeoM.Translate(screenX, screenY)
+    screen.DrawImage(monster.Sprite, op)
 
-	// Draw health bar
-	healthBarWidth := monster.Width
-	healthBarHeight := 5.0
-	healthBarY := screenY - healthBarHeight - 2 // 2 pixels above the monster
+    // Draw health bar
+    healthBarWidth := monster.Width
+    healthBarHeight := 5.0
+    healthBarY := screenY - healthBarHeight - 2 // 2 pixels above the monster
 
-	// Draw background (empty health bar)
-	ebitenutil.DrawRect(screen, screenX, healthBarY, healthBarWidth, healthBarHeight, color.RGBA{255, 0, 0, 255})
+    // Draw background (empty health bar)
+    ebitenutil.DrawRect(screen, screenX, healthBarY, healthBarWidth, healthBarHeight, color.RGBA{255, 0, 0, 255})
 
-	// Draw filled portion of health bar
-	healthPercentage := float64(monster.Health) / float64(monster.MaxHealth)
-	filledWidth := healthBarWidth * healthPercentage
-	ebitenutil.DrawRect(screen, screenX, healthBarY, filledWidth, healthBarHeight, color.RGBA{0, 255, 0, 255})
+    // Draw filled portion of health bar
+    healthPercentage := float64(monster.Health) / float64(monster.MaxHealth)
+    filledWidth := healthBarWidth * healthPercentage
+    ebitenutil.DrawRect(screen, screenX, healthBarY, filledWidth, healthBarHeight, color.RGBA{0, 255, 0, 255})
 }
 
 func (r *Renderer) drawTile(screen *ebiten.Image, x, y int, tileType TileType, camera *Camera) {
