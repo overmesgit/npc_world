@@ -68,17 +68,17 @@ func (r *Renderer) drawMonster(screen *ebiten.Image, monster *Monster, camera *C
     screen.DrawImage(monster.Sprite, op)
 
     // Draw health bar
-    healthBarWidth := monster.Width
-    healthBarHeight := 5.0
-    healthBarY := screenY - healthBarHeight - 2 // 2 pixels above the monster
+    r.drawHealthBar(screen, screenX, screenY-10, monster.Width, 5, monster.Health, monster.MaxHealth)
+}
 
+func (r *Renderer) drawHealthBar(screen *ebiten.Image, x, y, width, height float64, health, maxHealth int) {
     // Draw background (empty health bar)
-    ebitenutil.DrawRect(screen, screenX, healthBarY, healthBarWidth, healthBarHeight, color.RGBA{255, 0, 0, 255})
+    ebitenutil.DrawRect(screen, x, y, width, height, color.RGBA{255, 0, 0, 255})
 
     // Draw filled portion of health bar
-    healthPercentage := float64(monster.Health) / float64(monster.MaxHealth)
-    filledWidth := healthBarWidth * healthPercentage
-    ebitenutil.DrawRect(screen, screenX, healthBarY, filledWidth, healthBarHeight, color.RGBA{0, 255, 0, 255})
+    healthPercentage := float64(health) / float64(maxHealth)
+    filledWidth := width * healthPercentage
+    ebitenutil.DrawRect(screen, x, y, filledWidth, height, color.RGBA{0, 255, 0, 255})
 }
 
 func (r *Renderer) drawTile(screen *ebiten.Image, x, y int, tileType TileType, camera *Camera) {
@@ -94,7 +94,6 @@ func (r *Renderer) drawTile(screen *ebiten.Image, x, y int, tileType TileType, c
 }
 
 func (r *Renderer) drawCharacter(screen *ebiten.Image, char *Character, camera *Camera) {
-    // Calculate screen position
     screenX := char.X - camera.X
     screenY := char.Y - camera.Y
 
@@ -103,11 +102,14 @@ func (r *Renderer) drawCharacter(screen *ebiten.Image, char *Character, camera *
     op.GeoM.Translate(screenX, screenY)
     screen.DrawImage(char.Sprite, op)
 
+    // Draw health bar
+    r.drawHealthBar(screen, screenX, screenY-10, char.Width, 5, char.Health, char.MaxHealth)
+
     // Draw character name
-    text.Draw(screen, char.Name, r.font, int(screenX), int(screenY)-5, color.White)
+    text.Draw(screen, char.Name, r.font, int(screenX), int(screenY)-15, color.White)
 
     // Draw attack message if attacking
     if char.Attack.IsAttacking {
-        text.Draw(screen, char.Attack.Message, r.font, int(screenX), int(screenY)-20, color.RGBA{255, 0, 0, 255})
+        text.Draw(screen, char.Attack.Message, r.font, int(screenX), int(screenY)-30, color.RGBA{255, 0, 0, 255})
     }
 }

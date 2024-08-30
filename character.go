@@ -1,33 +1,50 @@
 package main
 
 import (
+    "github.com/solarlune/resolv"
     "math"
 
     "github.com/hajimehoshi/ebiten/v2"
 )
 
 type Character struct {
-    X, Y     float64
-    Name     string
-    Speed    float64
-    IsPlayer bool
-    Sprite   *ebiten.Image
-    Width    float64
-    Height   float64
-    Attack   Attack
+    X, Y      float64
+    Name      string
+    Speed     float64
+    IsPlayer  bool
+    Sprite    *ebiten.Image
+    Width     float64
+    Height    float64
+    Attack    Attack
+    Health    int
+    MaxHealth int
+    collider  *resolv.Object
 }
 
 func NewCharacter(x, y float64, name string, sprite *ebiten.Image) Character {
-    return Character{
-        X:        x,
-        Y:        y,
-        Name:     name,
-        Speed:    2.0,
-        IsPlayer: name == "Player",
-        Sprite:   sprite,
-        Width:    float64(TileSize),
-        Height:   float64(TileSize),
-        Attack:   NewAttack(),
+    c := Character{
+        X:         x,
+        Y:         y,
+        Name:      name,
+        Speed:     2.0,
+        IsPlayer:  name == "Player",
+        Sprite:    sprite,
+        Width:     float64(TileSize),
+        Height:    float64(TileSize),
+        Attack:    NewAttack(),
+        Health:    100,
+        MaxHealth: 100,
+    }
+    c.collider = resolv.NewObject(x, y, float64(TileSize), float64(TileSize))
+    c.collider.SetShape(resolv.NewRectangle(0, 0, float64(TileSize), float64(TileSize)))
+    c.collider.AddTags("character")
+    return c
+}
+
+func (c *Character) TakeDamage(amount int) {
+    c.Health -= amount
+    if c.Health < 0 {
+        c.Health = 0
     }
 }
 
@@ -52,7 +69,6 @@ func (c *Character) PerformAttack(w *World) {
 }
 
 func (c *Character) Move(dx, dy float64, w *World) {
-    // Normalize diagonal movement
     if dx != 0 && dy != 0 {
         magnitude := math.Sqrt(dx*dx + dy*dy)
         dx /= magnitude
@@ -61,16 +77,23 @@ func (c *Character) Move(dx, dy float64, w *World) {
 
     newX := c.X + dx*c.Speed
     newY := c.Y + dy*c.Speed
+    c.collider.Position.X = c.X
+    c.collider.Position.Y = c.Y
 
-    // Check boundaries and collisions for X movement
-    if newX >= 0 && newX+c.Width <= float64(w.gameMap.Width*TileSize) && !c.collidesWithMountain(newX, c.Y, w) {
+    if collision := c.collider.Check(dx*c.Speed, dy*c.Speed, "mountain", "boundary"); collision == nil {
         c.X = newX
-    }
-
-    // Check boundaries and collisions for Y movement
-    if newY >= 0 && newY+c.Height <= float64(w.gameMap.Height*TileSize) && !c.collidesWithMountain(c.X, newY, w) {
         c.Y = newY
+        c.collider.Position.X = c.X
+        c.collider.Position.Y = c.Y
+    } else {
+        // Move as far as possible before collision
+        //        diff := collision.ContactWithObject(collision.Objects[0])
+        //        c.X += diff.X
+        //        c.Y += diff.Y
+        //        c.collider.Position.X = c.X
+        //        c.collider.Position.Y = c.Y
     }
+    c.collider.Update()
 }
 
 func (c *Character) collidesWithMountain(x, y float64, w *World) bool {

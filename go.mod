@@ -4,6 +4,7 @@ go 1.23.0
 
 require (
 	github.com/hajimehoshi/ebiten/v2 v2.7.8
+	github.com/solarlune/resolv v0.7.0
 	golang.org/x/image v0.18.0
 )
 

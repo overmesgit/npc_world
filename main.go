@@ -16,11 +16,11 @@ type Game struct {
 
 func NewGame() *Game {
     monsterSprite, _, err := ebitenutil.NewImageFromFile("assets/monsters/tile_0_0.png")
-	if err != nil {
-		log.Fatal(err)
-	}
+    if err != nil {
+        log.Fatal(err)
+    }
 
-	world := NewWorld(monsterSprite)
+    world := NewWorld(monsterSprite)
 
     // Load sprites
     playerSprite, _, err := ebitenutil.NewImageFromFile("assets/rogues/tile_0_0.png")
@@ -36,6 +36,13 @@ func NewGame() *Game {
     world.AddCharacter(NewCharacter(float64(3*TileSize), float64(3*TileSize), "Player", playerSprite))
     world.AddCharacter(NewCharacter(float64(1*TileSize), float64(1*TileSize), "NPC1", npcSprite))
     world.AddCharacter(NewCharacter(float64(2*TileSize), float64(2*TileSize), "NPC2", npcSprite))
+
+    for i := range world.characters {
+        world.space.Add(world.characters[i].collider)
+    }
+    for _, monster := range world.monsters {
+        world.space.Add(monster.collider)
+    }
 
     return &Game{
         world:        world,
