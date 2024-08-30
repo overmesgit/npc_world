@@ -21,7 +21,6 @@ func NewGame() *Game {
 	}
 
 	world := NewWorld(monsterSprite)
-    world.gameMap.AddRandomFeatures()
 
     // Load sprites
     playerSprite, _, err := ebitenutil.NewImageFromFile("assets/rogues/tile_0_0.png")
@@ -35,8 +34,8 @@ func NewGame() *Game {
 
     // Create characters with sprites
     world.AddCharacter(NewCharacter(float64(3*TileSize), float64(3*TileSize), "Player", playerSprite))
-    world.AddCharacter(NewCharacter(float64(6*TileSize), float64(6*TileSize), "NPC1", npcSprite))
-    world.AddCharacter(NewCharacter(float64(9*TileSize), float64(9*TileSize), "NPC2", npcSprite))
+    world.AddCharacter(NewCharacter(float64(1*TileSize), float64(1*TileSize), "NPC1", npcSprite))
+    world.AddCharacter(NewCharacter(float64(2*TileSize), float64(2*TileSize), "NPC2", npcSprite))
 
     return &Game{
         world:        world,

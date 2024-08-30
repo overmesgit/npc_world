@@ -7,48 +7,48 @@ import (
 )
 
 type Character struct {
-	X, Y     float64
-	Name     string
-	Speed    float64
-	IsPlayer bool
-	Sprite   *ebiten.Image
-	Width    float64
-	Height   float64
-	Attack   Attack
+    X, Y     float64
+    Name     string
+    Speed    float64
+    IsPlayer bool
+    Sprite   *ebiten.Image
+    Width    float64
+    Height   float64
+    Attack   Attack
 }
 
 func NewCharacter(x, y float64, name string, sprite *ebiten.Image) Character {
-	return Character{
-		X:        x,
-		Y:        y,
-		Name:     name,
-		Speed:    2.0,
-		IsPlayer: name == "Player",
-		Sprite:   sprite,
-		Width:    float64(TileSize),
-		Height:   float64(TileSize),
-		Attack:   NewAttack(),
-	}
+    return Character{
+        X:        x,
+        Y:        y,
+        Name:     name,
+        Speed:    2.0,
+        IsPlayer: name == "Player",
+        Sprite:   sprite,
+        Width:    float64(TileSize),
+        Height:   float64(TileSize),
+        Attack:   NewAttack(),
+    }
 }
 
 func (c *Character) Update(w *World) {
-	c.Attack.Update()
-	if c.Attack.IsAttacking && !c.Attack.HasDealtDamage {
-		c.PerformAttack(w)
-		c.Attack.HasDealtDamage = true  // Set this flag after dealing damage
-	}
+    c.Attack.Update()
+    if c.Attack.IsAttacking && !c.Attack.HasDealtDamage {
+        c.PerformAttack(w)
+        c.Attack.HasDealtDamage = true // Set this flag after dealing damage
+    }
 }
 
 func (c *Character) PerformAttack(w *World) {
-	for _, monster := range w.monsters {
-		dx := monster.X - c.X
-		dy := monster.Y - c.Y
-		distance := math.Sqrt(dx*dx + dy*dy)
+    for _, monster := range w.monsters {
+        dx := monster.X - c.X
+        dy := monster.Y - c.Y
+        distance := math.Sqrt(dx*dx + dy*dy)
 
-		if distance <= c.Attack.Range {
-			monster.TakeDamage(c.Attack.Damage)
-		}
-	}
+        if distance <= c.Attack.Range {
+            monster.TakeDamage(c.Attack.Damage)
+        }
+    }
 }
 
 func (c *Character) Move(dx, dy float64, w *World) {
@@ -62,13 +62,13 @@ func (c *Character) Move(dx, dy float64, w *World) {
     newX := c.X + dx*c.Speed
     newY := c.Y + dy*c.Speed
 
-    // Check collision for X movement
-    if !c.collidesWithMountain(newX, c.Y, w) {
+    // Check boundaries and collisions for X movement
+    if newX >= 0 && newX+c.Width <= float64(w.gameMap.Width*TileSize) && !c.collidesWithMountain(newX, c.Y, w) {
         c.X = newX
     }
 
-    // Check collision for Y movement
-    if !c.collidesWithMountain(c.X, newY, w) {
+    // Check boundaries and collisions for Y movement
+    if newY >= 0 && newY+c.Height <= float64(w.gameMap.Height*TileSize) && !c.collidesWithMountain(c.X, newY, w) {
         c.Y = newY
     }
 }
@@ -92,5 +92,3 @@ func (c *Character) collidesWithMountain(x, y float64, w *World) bool {
 
     return false
 }
-
-

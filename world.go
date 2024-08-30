@@ -40,28 +40,58 @@ func (w *World) Update() {
     w.monsters = aliveMonsters
 
     // Spawn new monster every 10 seconds
-    if time.Since(w.lastMonsterSpawn) > 10*time.Second {
+    if time.Since(w.lastMonsterSpawn) > 3*time.Second {
         w.SpawnMonster()
         w.lastMonsterSpawn = time.Now()
     }
 }
 
-func (w *World) SpawnMonster() {
-    centerX := float64((w.gameMap.Width / 2) * TileSize)
-    centerY := float64((w.gameMap.Height / 2) * TileSize)
+func (w *World) SpawnMonster() bool {
+	// Define the central area
+	centerX := w.gameMap.Width
+	centerY := w.gameMap.Height
+	spawnRadius := 10 // Adjust this value to change the spawn area size
 
-    // Ensure the spawn point is not on a mountain
-    for i := 0; i < 100; i++ { // Limit attempts to prevent infinite loop
-        x := centerX + (rand.Float64()*10-5)*TileSize
-        y := centerY + (rand.Float64()*10-5)*TileSize
-        if w.gameMap.IsTileWalkable(int(x/TileSize), int(y/TileSize)) {
-            monster := NewMonster(x, y, w.monsterSprite)
-            monster.NormalizeDirection() // Ensure the initial direction is normalized
-            w.monsters = append(w.monsters, monster)
-            return
-        }
-    }
-    // If no suitable spawn point found, don't spawn a monster this time
+	// Try to find a suitable spawn point
+	for attempts := 0; attempts < 100; attempts++ {
+		x := centerX + (rand.Intn(spawnRadius*2+1) - spawnRadius)
+		y := centerY + (rand.Intn(spawnRadius*2+1) - spawnRadius)
+
+		if w.IsSpawnPointValid(x, y) {
+			monster := NewMonster(float64(x*TileSize), float64(y*TileSize), w.monsterSprite)
+			monster.NormalizeDirection()
+			w.monsters = append(w.monsters, monster)
+			return true
+		}
+	}
+	return false
+}
+
+func (w *World) IsSpawnPointValid(x, y int) bool {
+	// Check if the tile is walkable
+	if !w.gameMap.IsTileWalkable(x, y) {
+		return false
+	}
+
+	// Check for collision with other monsters
+	for _, monster := range w.monsters {
+		monsterTileX := int(monster.X / TileSize)
+		monsterTileY := int(monster.Y / TileSize)
+		if monsterTileX == x && monsterTileY == y {
+			return false
+		}
+	}
+
+	// Check for collision with characters
+	for _, character := range w.characters {
+		charTileX := int(character.X / TileSize)
+		charTileY := int(character.Y / TileSize)
+		if charTileX == x && charTileY == y {
+			return false
+		}
+	}
+
+	return true
 }
 
 func (w *World) AddCharacter(c Character) {
@@ -78,4 +108,11 @@ func (w *World) GetPlayerCharacter() *Character {
         return &w.characters[0]
     }
     return nil
+}
+
+func (w *World) IsTileWalkable(x, y int) bool {
+    if x < 0 || x >= w.gameMap.Width || y < 0 || y >= w.gameMap.Height {
+        return false
+    }
+    return w.gameMap.IsTileWalkable(x, y)
 }
