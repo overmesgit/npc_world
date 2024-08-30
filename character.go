@@ -7,33 +7,48 @@ import (
 )
 
 type Character struct {
-    X, Y     float64
-    Name     string
-    Speed    float64
-    IsPlayer bool
-    Sprite   *ebiten.Image
-    Width    float64
-    Height   float64
-    Attack   Attack
+	X, Y     float64
+	Name     string
+	Speed    float64
+	IsPlayer bool
+	Sprite   *ebiten.Image
+	Width    float64
+	Height   float64
+	Attack   Attack
 }
 
 func NewCharacter(x, y float64, name string, sprite *ebiten.Image) Character {
-    return Character{
-        X:        x,
-        Y:        y,
-        Name:     name,
-        Speed:    2.0,
-        IsPlayer: name == "Player",
-        Sprite:   sprite,
-        Width:    float64(TileSize), // Assuming character size is same as tile size
-        Height:   float64(TileSize),
-        Attack:   NewAttack(),
-    }
+	return Character{
+		X:        x,
+		Y:        y,
+		Name:     name,
+		Speed:    2.0,
+		IsPlayer: name == "Player",
+		Sprite:   sprite,
+		Width:    float64(TileSize),
+		Height:   float64(TileSize),
+		Attack:   NewAttack(),
+	}
 }
 
 func (c *Character) Update(w *World) {
-    // Update character logic
-    c.Attack.Update()
+	c.Attack.Update()
+	if c.Attack.IsAttacking && !c.Attack.HasDealtDamage {
+		c.PerformAttack(w)
+		c.Attack.HasDealtDamage = true  // Set this flag after dealing damage
+	}
+}
+
+func (c *Character) PerformAttack(w *World) {
+	for _, monster := range w.monsters {
+		dx := monster.X - c.X
+		dy := monster.Y - c.Y
+		distance := math.Sqrt(dx*dx + dy*dy)
+
+		if distance <= c.Attack.Range {
+			monster.TakeDamage(c.Attack.Damage)
+		}
+	}
 }
 
 func (c *Character) Move(dx, dy float64, w *World) {
@@ -77,3 +92,5 @@ func (c *Character) collidesWithMountain(x, y float64, w *World) bool {
 
     return false
 }
+
+

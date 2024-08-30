@@ -11,6 +11,8 @@ type Monster struct {
     Height    float64
     Speed     float64
     Direction struct{ X, Y float64 }
+    Health    int
+    MaxHealth int
 }
 
 func NewMonster(x, y float64) *Monster {
@@ -24,6 +26,8 @@ func NewMonster(x, y float64) *Monster {
             X: rand.Float64()*2 - 1,
             Y: rand.Float64()*2 - 1,
         },
+        Health:    100,
+        MaxHealth: 100,
     }
 }
 
@@ -57,6 +61,11 @@ func (m *Monster) Update(w *World) {
         m.Direction.X = rand.Float64()*2 - 1
         m.Direction.Y = rand.Float64()*2 - 1
     }
+
+    if m.Health <= 0 {
+        // Monster death logic will be handled in the World.Update method
+        return
+    }
 }
 
 func (m *Monster) NormalizeDirection() {
@@ -67,4 +76,9 @@ func (m *Monster) NormalizeDirection() {
     }
 }
 
-
+func (m *Monster) TakeDamage(amount int) {
+    m.Health -= amount
+    if m.Health < 0 {
+        m.Health = 0
+    }
+}

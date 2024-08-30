@@ -22,17 +22,25 @@ func NewWorld() *World {
 }
 
 func (w *World) Update() {
-    for i := range w.characters {
-        w.characters[i].Update(w)
-    }
-    for i := range w.monsters {
-        w.monsters[i].Update(w)
-    }
+	for i := range w.characters {
+		w.characters[i].Update(w)
+	}
 
-    if time.Since(w.lastMonsterSpawn) > 10*time.Second {
-        w.SpawnMonster()
-        w.lastMonsterSpawn = time.Now()
-    }
+	// Update monsters and remove dead ones
+	aliveMonsters := make([]*Monster, 0)
+	for _, monster := range w.monsters {
+		monster.Update(w)
+		if monster.Health > 0 {
+			aliveMonsters = append(aliveMonsters, monster)
+		}
+	}
+	w.monsters = aliveMonsters
+
+	// Spawn new monster every 10 seconds
+	if time.Since(w.lastMonsterSpawn) > 10*time.Second {
+		w.SpawnMonster()
+		w.lastMonsterSpawn = time.Now()
+	}
 }
 
 func (w *World) SpawnMonster() {
