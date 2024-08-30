@@ -14,6 +14,7 @@ type Character struct {
     Sprite   *ebiten.Image
     Width    float64
     Height   float64
+    Attack   Attack
 }
 
 func NewCharacter(x, y float64, name string, sprite *ebiten.Image) Character {
@@ -26,11 +27,13 @@ func NewCharacter(x, y float64, name string, sprite *ebiten.Image) Character {
         Sprite:   sprite,
         Width:    float64(TileSize), // Assuming character size is same as tile size
         Height:   float64(TileSize),
+        Attack:   NewAttack(),
     }
 }
 
 func (c *Character) Update(w *World) {
     // Update character logic
+    c.Attack.Update()
 }
 
 func (c *Character) Move(dx, dy float64, w *World) {

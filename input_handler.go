@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"
+    "github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
 type InputHandler struct{}
@@ -32,5 +33,10 @@ func (ih *InputHandler) HandleInput(world *World) {
 	}
 
 	player.Move(dx, dy, world)
+
+	// Handle attack input
+	if inpututil.IsKeyJustPressed(ebiten.KeyControl) {
+		player.Attack.TriggerAttack()
+	}
 }
 

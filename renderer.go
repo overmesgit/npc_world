@@ -50,6 +50,20 @@ func (r *Renderer) Render(screen *ebiten.Image, world *World, camera *Camera) {
     for _, char := range world.GetCharacters() {
         r.drawCharacter(screen, &char, camera)
     }
+
+    // Draw monsters
+    for _, monster := range world.monsters {
+        r.drawMonster(screen, monster, camera)
+    }
+
+}
+
+func (r *Renderer) drawMonster(screen *ebiten.Image, monster *Monster, camera *Camera) {
+    screenX := monster.X - camera.X
+    screenY := monster.Y - camera.Y
+
+    // Draw monster as a red square
+    ebitenutil.DrawRect(screen, screenX, screenY, monster.Width, monster.Height, color.RGBA{255, 0, 0, 255})
 }
 
 func (r *Renderer) drawTile(screen *ebiten.Image, x, y int, tileType TileType, camera *Camera) {
@@ -76,4 +90,9 @@ func (r *Renderer) drawCharacter(screen *ebiten.Image, char *Character, camera *
 
     // Draw character name
     text.Draw(screen, char.Name, r.font, int(screenX), int(screenY)-5, color.White)
+
+    // Draw attack message if attacking
+    if char.Attack.IsAttacking {
+        text.Draw(screen, char.Attack.Message, r.font, int(screenX), int(screenY)-20, color.RGBA{255, 0, 0, 255})
+    }
 }
