@@ -1,0 +1,5 @@
+.gitignore
+.claudeignore
+go.sum
+assets
+helpers

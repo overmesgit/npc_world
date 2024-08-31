@@ -23,7 +23,7 @@ func NewGame() *Game {
     world := NewWorld(monsterSprite)
 
     // Load sprites
-    playerSprite, _, err := ebitenutil.NewImageFromFile("assets/rogues/tile_0_0.png")
+    playerSprite, _, err := ebitenutil.NewImageFromFile("assets/rogues/tile_0_1.png")
     if err != nil {
         log.Fatal(err)
     }
