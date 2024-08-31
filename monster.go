@@ -9,7 +9,6 @@ import (
 )
 
 type Monster struct {
-    X, Y           float64
     Width, Height  float64
     Speed          float64
     Direction      struct{ X, Y float64 }
@@ -20,13 +19,11 @@ type Monster struct {
     AttackDamage   int
     AttackCooldown time.Duration
     LastAttackTime time.Time
-    collider       *resolv.Object
+    Object         *resolv.Object
 }
 
 func NewMonster(x, y float64, sprite *ebiten.Image) *Monster {
     m := &Monster{
-        X:              x,
-        Y:              y,
         Width:          float64(TileSize),
         Height:         float64(TileSize),
         Speed:          1.0,
@@ -38,9 +35,9 @@ func NewMonster(x, y float64, sprite *ebiten.Image) *Monster {
         AttackDamage:   10,
         AttackCooldown: time.Second * 2, // Attack every 2 seconds
     }
-    m.collider = resolv.NewObject(x, y, float64(TileSize), float64(TileSize))
-    m.collider.SetShape(resolv.NewRectangle(0, 0, float64(TileSize), float64(TileSize)))
-    m.collider.AddTags("monster")
+    m.Object = resolv.NewObject(x, y, float64(TileSize), float64(TileSize))
+    m.Object.SetShape(resolv.NewRectangle(0, 0, float64(TileSize), float64(TileSize)))
+    m.Object.AddTags("monster")
     return m
 }
 
@@ -53,8 +50,7 @@ func (m *Monster) Update(w *World) {
     if nearestChar != nil && distance <= m.AttackRange {
         m.AttackCharacter(nearestChar)
     } else if nearestChar != nil && distance <= m.AttackRange*2 {
-        // Move towards the character if they're within twice the attack range
-        m.MoveTowards(nearestChar.X, nearestChar.Y, w)
+        m.MoveTowards(nearestChar.Object)
     } else {
         m.MoveRandomly()
     }
@@ -66,9 +62,7 @@ func (m *Monster) FindNearestCharacter(w *World) (*Character, float64) {
 
     for i := range w.characters {
         char := &w.characters[i]
-        dx := char.X - m.X
-        dy := char.Y - m.Y
-        distance := math.Sqrt(dx*dx + dy*dy)
+        distance := char.Object.Position.Distance(m.Object.Position)
 
         if distance < minDistance {
             minDistance = distance
@@ -86,40 +80,40 @@ func (m *Monster) AttackCharacter(char *Character) {
     }
 }
 
-func (m *Monster) MoveTowards(targetX, targetY float64, w *World) {
-    dx := targetX - m.X
-    dy := targetY - m.Y
-    distance := math.Sqrt(dx*dx + dy*dy)
+func (m *Monster) MoveTowards(object *resolv.Object) {
+    position := m.Object.Position
+    distance := position.Distance(object.Position)
 
     if distance > 0 {
-        m.Direction.X = dx / distance
-        m.Direction.Y = dy / distance
+        sub := object.Position.Sub(position)
+        m.Direction.X = sub.X / distance
+        m.Direction.Y = sub.Y / distance
     }
 
-    newX := m.X + m.Direction.X*m.Speed
-    newY := m.Y + m.Direction.Y*m.Speed
+    newX := position.X + m.Direction.X*m.Speed
+    newY := position.Y + m.Direction.Y*m.Speed
 
     m.TryMove(newX, newY)
 }
 
 func (m *Monster) TryMove(newX, newY float64) bool {
-    dx := newX - m.X
-    dy := newY - m.Y
+    position := m.Object.Position
+    dx := newX - position.X
+    dy := newY - position.Y
 
-    if collision := m.collider.Check(dx, dy, "mountain", "boundary"); collision == nil {
-        m.X = newX
-        m.Y = newY
-        m.collider.Position.X = m.X
-        m.collider.Position.Y = m.Y
-        m.collider.Update()
+    if collision := m.Object.Check(dx, dy, "mountain", "character"); collision == nil {
+        m.Object.Position.X = newX
+        m.Object.Position.Y = newY
+        m.Object.Update()
         return true
-    } else {
-        return false
     }
+    return false
 }
+
 func (m *Monster) MoveRandomly() {
-    newX := m.X + m.Direction.X*m.Speed
-    newY := m.Y + m.Direction.Y*m.Speed
+    position := m.Object.Position
+    newX := position.X + m.Direction.X*m.Speed
+    newY := position.Y + m.Direction.Y*m.Speed
 
     if !m.TryMove(newX, newY) {
         // Change direction if hit an obstacle
@@ -141,6 +135,6 @@ func (m *Monster) TakeDamage(amount int) {
     m.Health -= amount
     if m.Health < 0 {
         m.Health = 0
-        m.collider.Space.Remove(m.collider)
+        m.Object.Space.Remove(m.Object)
     }
 }

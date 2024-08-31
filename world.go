@@ -2,9 +2,9 @@ package main
 
 import (
     "github.com/hajimehoshi/ebiten/v2"
+    "github.com/solarlune/resolv"
     "math/rand"
     "time"
-    "github.com/solarlune/resolv"
 )
 
 type World struct {
@@ -33,7 +33,6 @@ func NewWorld(monsterSprite *ebiten.Image) *World {
 }
 
 func (w *World) initializeCollisionSpace() {
-    // Add static objects (like mountains) to the collision space
     for y := 0; y < w.gameMap.Height; y++ {
         for x := 0; x < w.gameMap.Width; x++ {
             if w.gameMap.Tiles[y][x] == TileMountain {
@@ -44,13 +43,6 @@ func (w *World) initializeCollisionSpace() {
             }
         }
     }
-}
-
-func (w *World) IsTileWalkable(x, y int) bool {
-    if x < 0 || x >= w.gameMap.Width || y < 0 || y >= w.gameMap.Height {
-        return false
-    }
-    return w.gameMap.Tiles[y][x] != TileMountain
 }
 
 func (w *World) Update() {
@@ -77,55 +69,40 @@ func (w *World) Update() {
 
 func (w *World) SpawnMonster() bool {
     // Define the central area
-    centerX := w.gameMap.Width
-    centerY := w.gameMap.Height
-    spawnRadius := 10 // Adjust this value to change the spawn area size
+    centerX := 18
+    centerY := 18
+    spawnRadius := 4 // Adjust this value to change the spawn area size
 
     // Try to find a suitable spawn point
     for attempts := 0; attempts < 100; attempts++ {
-        x := centerX + (rand.Intn(spawnRadius*2+1) - spawnRadius)
-        y := centerY + (rand.Intn(spawnRadius*2+1) - spawnRadius)
+        xTile := centerX + (rand.Intn(spawnRadius*2+1) - spawnRadius)
+        yTile := centerY + (rand.Intn(spawnRadius*2+1) - spawnRadius)
 
-        if w.IsSpawnPointValid(x, y) {
-            monster := NewMonster(float64(x*TileSize), float64(y*TileSize), w.monsterSprite)
+        if w.IsSpawnPointValid(xTile, yTile) {
+            monster := NewMonster(float64(xTile*TileSize), float64(yTile*TileSize), w.monsterSprite)
             monster.NormalizeDirection()
             w.monsters = append(w.monsters, monster)
-            w.space.Add(monster.collider)
+            w.space.Add(monster.Object)
             return true
         }
     }
     return false
 }
 
-func (w *World) IsSpawnPointValid(x, y int) bool {
-    // Check if the tile is walkable
-    if !w.gameMap.IsTileWalkable(x, y) {
+func (w *World) IsSpawnPointValid(xTile, yTile int) bool {
+    if xTile < 0 || xTile >= w.gameMap.Width || yTile < 0 || yTile >= w.gameMap.Height {
         return false
     }
-
-    // Check for collision with other monsters
-    for _, monster := range w.monsters {
-        monsterTileX := int(monster.X / TileSize)
-        monsterTileY := int(monster.Y / TileSize)
-        if monsterTileX == x && monsterTileY == y {
-            return false
-        }
+    collision := w.space.CheckCells(xTile, yTile, 1, 1, "mountain", "character", "monster")
+    if len(collision) == 0 {
+        return true
     }
-
-    // Check for collision with characters
-    for _, character := range w.characters {
-        charTileX := int(character.X / TileSize)
-        charTileY := int(character.Y / TileSize)
-        if charTileX == x && charTileY == y {
-            return false
-        }
-    }
-
-    return true
+    return false
 }
 
 func (w *World) AddCharacter(c Character) {
     w.characters = append(w.characters, c)
+    w.space.Add(c.Object)
 }
 
 func (w *World) GetCharacters() []Character {

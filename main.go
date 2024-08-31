@@ -2,6 +2,7 @@ package main
 
 import (
     "github.com/hajimehoshi/ebiten/v2/ebitenutil"
+    "github.com/solarlune/resolv"
     "log"
 
     "github.com/hajimehoshi/ebiten/v2"
@@ -12,6 +13,7 @@ type Game struct {
     camera       *Camera
     renderer     *Renderer
     inputHandler *InputHandler
+    space        *resolv.Space
 }
 
 func NewGame() *Game {
@@ -22,7 +24,6 @@ func NewGame() *Game {
 
     world := NewWorld(monsterSprite)
 
-    // Load sprites
     playerSprite, _, err := ebitenutil.NewImageFromFile("assets/rogues/tile_0_1.png")
     if err != nil {
         log.Fatal(err)
@@ -32,17 +33,9 @@ func NewGame() *Game {
         log.Fatal(err)
     }
 
-    // Create characters with sprites
     world.AddCharacter(NewCharacter(float64(3*TileSize), float64(3*TileSize), "Player", playerSprite))
     world.AddCharacter(NewCharacter(float64(1*TileSize), float64(1*TileSize), "NPC1", npcSprite))
     world.AddCharacter(NewCharacter(float64(2*TileSize), float64(2*TileSize), "NPC2", npcSprite))
-
-    for i := range world.characters {
-        world.space.Add(world.characters[i].collider)
-    }
-    for _, monster := range world.monsters {
-        world.space.Add(monster.collider)
-    }
 
     return &Game{
         world:        world,

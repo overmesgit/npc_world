@@ -1,16 +1,27 @@
 package main
+
+import (
+    "github.com/solarlune/resolv"
+)
+
 type Camera struct {
-	X, Y float64
+    Position resolv.Vector
 }
 
 func NewCamera() *Camera {
-	return &Camera{}
+    return &Camera{
+        Position: resolv.NewVector(0, 0),
+    }
 }
 
 func (c *Camera) Update(player *Character) {
-	if player != nil {
-		c.X = player.X - 320 // Assuming 640x480 screen
-		c.Y = player.Y - 240
-	}
+    if player != nil {
+        playerPos := player.Object.Position
+        c.Position.X = playerPos.X - 320 // Assuming 640x480 screen
+        c.Position.Y = playerPos.Y - 240
+    }
 }
 
+func (c *Camera) WorldToScreen(worldX, worldY float64) (screenX, screenY float64) {
+    return worldX - c.Position.X, worldY - c.Position.Y
+}

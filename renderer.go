@@ -55,12 +55,45 @@ func (r *Renderer) Render(screen *ebiten.Image, world *World, camera *Camera) {
     for _, monster := range world.monsters {
         r.drawMonster(screen, monster, camera)
     }
+}
 
+func (r *Renderer) drawTile(screen *ebiten.Image, x, y int, tileType TileType, camera *Camera) {
+    worldX := float64(x * TileSize)
+    worldY := float64(y * TileSize)
+    screenX, screenY := camera.WorldToScreen(worldX, worldY)
+
+    switch tileType {
+    case TileGrass:
+        ebitenutil.DrawRect(screen, screenX, screenY, float64(TileSize), float64(TileSize), color.RGBA{34, 139, 34, 255}) // Forest green
+    case TileMountain:
+        ebitenutil.DrawRect(screen, screenX, screenY, float64(TileSize), float64(TileSize), color.RGBA{139, 69, 19, 255}) // Saddle brown
+    }
+}
+
+func (r *Renderer) drawCharacter(screen *ebiten.Image, char *Character, camera *Camera) {
+    pos := char.Object.Position
+    screenX, screenY := camera.WorldToScreen(pos.X, pos.Y)
+
+    // Draw character sprite
+    op := &ebiten.DrawImageOptions{}
+    op.GeoM.Translate(screenX, screenY)
+    screen.DrawImage(char.Sprite, op)
+
+    // Draw health bar
+    r.drawHealthBar(screen, screenX, screenY-10, char.Width, 5, char.Health, char.MaxHealth)
+
+    // Draw character name
+    text.Draw(screen, char.Name, r.font, int(screenX), int(screenY)-15, color.White)
+
+    // Draw attack message if attacking
+    if char.Attack.IsAttacking {
+        text.Draw(screen, char.Attack.Message, r.font, int(screenX), int(screenY)-30, color.RGBA{255, 0, 0, 255})
+    }
 }
 
 func (r *Renderer) drawMonster(screen *ebiten.Image, monster *Monster, camera *Camera) {
-    screenX := monster.X - camera.X
-    screenY := monster.Y - camera.Y
+    pos := monster.Object.Position
+    screenX, screenY := camera.WorldToScreen(pos.X, pos.Y)
 
     // Draw monster sprite
     op := &ebiten.DrawImageOptions{}
@@ -79,37 +112,4 @@ func (r *Renderer) drawHealthBar(screen *ebiten.Image, x, y, width, height float
     healthPercentage := float64(health) / float64(maxHealth)
     filledWidth := width * healthPercentage
     ebitenutil.DrawRect(screen, x, y, filledWidth, height, color.RGBA{0, 255, 0, 255})
-}
-
-func (r *Renderer) drawTile(screen *ebiten.Image, x, y int, tileType TileType, camera *Camera) {
-    screenX := float64(x*TileSize) - camera.X
-    screenY := float64(y*TileSize) - camera.Y
-
-    switch tileType {
-    case TileGrass:
-        ebitenutil.DrawRect(screen, screenX, screenY, float64(TileSize), float64(TileSize), color.RGBA{34, 139, 34, 255}) // Forest green
-    case TileMountain:
-        ebitenutil.DrawRect(screen, screenX, screenY, float64(TileSize), float64(TileSize), color.RGBA{139, 69, 19, 255}) // Saddle brown
-    }
-}
-
-func (r *Renderer) drawCharacter(screen *ebiten.Image, char *Character, camera *Camera) {
-    screenX := char.X - camera.X
-    screenY := char.Y - camera.Y
-
-    // Draw character sprite
-    op := &ebiten.DrawImageOptions{}
-    op.GeoM.Translate(screenX, screenY)
-    screen.DrawImage(char.Sprite, op)
-
-    // Draw health bar
-    r.drawHealthBar(screen, screenX, screenY-10, char.Width, 5, char.Health, char.MaxHealth)
-
-    // Draw character name
-    text.Draw(screen, char.Name, r.font, int(screenX), int(screenY)-15, color.White)
-
-    // Draw attack message if attacking
-    if char.Attack.IsAttacking {
-        text.Draw(screen, char.Attack.Message, r.font, int(screenX), int(screenY)-30, color.RGBA{255, 0, 0, 255})
-    }
 }

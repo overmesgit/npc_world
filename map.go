@@ -64,10 +64,3 @@ func loadMapFromFile(filename string) ([][]TileType, int, int) {
 
     return tiles, width, height
 }
-
-func (m *GameMap) IsTileWalkable(x, y int) bool {
-    if x < 0 || x >= m.Width || y < 0 || y >= m.Height {
-        return false
-    }
-    return m.Tiles[y][x] != TileMountain
-}
