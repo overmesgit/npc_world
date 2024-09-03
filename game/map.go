@@ -1,4 +1,4 @@
-package main
+package game
 
 import (
     "log"
@@ -25,7 +25,7 @@ type GameMap struct {
 }
 
 func NewGameMap() *GameMap {
-    tiles, width, height := loadMapFromFile("map.txt")
+    tiles, width, height := loadMapFromFile("game/map1.txt")
     return &GameMap{
         Tiles:  tiles,
         Width:  width,

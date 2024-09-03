@@ -1,21 +1,23 @@
-package main
+package game
 
 import (
+    "example.com/maj/units"
     "github.com/hajimehoshi/ebiten/v2"
     "github.com/hajimehoshi/ebiten/v2/ebitenutil"
     "github.com/hajimehoshi/ebiten/v2/text"
-    "image/color"
     "golang.org/x/image/font"
-    "golang.org/x/image/font/opentype"
     "golang.org/x/image/font/gofont/goregular"
+    "golang.org/x/image/font/opentype"
+    "image/color"
     "log"
 )
 
 type Renderer struct {
-    font font.Face
+    font    font.Face
+    sprites map[string]*ebiten.Image
 }
 
-func NewRenderer() *Renderer {
+func NewRenderer(sprites map[string]*ebiten.Image) *Renderer {
     tt, err := opentype.Parse(goregular.TTF)
     if err != nil {
         log.Fatal(err)
@@ -31,7 +33,8 @@ func NewRenderer() *Renderer {
     }
 
     return &Renderer{
-        font: font,
+        sprites: sprites,
+        font:    font,
     }
 }
 
@@ -40,21 +43,35 @@ func (r *Renderer) Render(screen *ebiten.Image, world *World, camera *Camera) {
     screen.Fill(color.RGBA{135, 206, 235, 255}) // Sky blue background
 
     // Draw game map
-    for y := 0; y < world.gameMap.Height; y++ {
-        for x := 0; x < world.gameMap.Width; x++ {
-            r.drawTile(screen, x, y, world.gameMap.Tiles[y][x], camera)
+    for y := 0; y < world.GameMap.Height; y++ {
+        for x := 0; x < world.GameMap.Width; x++ {
+            r.drawTile(screen, x, y, world.GameMap.Tiles[y][x], camera)
         }
     }
 
-    // Draw characters
+    // Draw Characters
     for _, char := range world.GetCharacters() {
-        r.drawCharacter(screen, &char, camera)
+        r.drawCharacter(screen, char, camera)
     }
 
-    // Draw monsters
-    for _, monster := range world.monsters {
+    // Draw Monsters
+    for _, monster := range world.Monsters {
         r.drawMonster(screen, monster, camera)
     }
+
+    // Draw goblin dens
+    for _, den := range world.GoblinDens {
+        r.drawGoblinDen(screen, den, camera)
+    }
+}
+
+func (r *Renderer) drawGoblinDen(screen *ebiten.Image, den *units.GoblinDen, camera *Camera) {
+    pos := den.Object.Position
+    screenX, screenY := camera.WorldToScreen(pos.X, pos.Y)
+
+    op := &ebiten.DrawImageOptions{}
+    op.GeoM.Translate(screenX, screenY)
+    screen.DrawImage(r.sprites["DEN"], op)
 }
 
 func (r *Renderer) drawTile(screen *ebiten.Image, x, y int, tileType TileType, camera *Camera) {
@@ -70,14 +87,14 @@ func (r *Renderer) drawTile(screen *ebiten.Image, x, y int, tileType TileType, c
     }
 }
 
-func (r *Renderer) drawCharacter(screen *ebiten.Image, char *Character, camera *Camera) {
+func (r *Renderer) drawCharacter(screen *ebiten.Image, char *units.Character, camera *Camera) {
     pos := char.Object.Position
     screenX, screenY := camera.WorldToScreen(pos.X, pos.Y)
 
     // Draw character sprite
     op := &ebiten.DrawImageOptions{}
     op.GeoM.Translate(screenX, screenY)
-    screen.DrawImage(char.Sprite, op)
+    screen.DrawImage(r.sprites["PLAYER"], op)
 
     // Draw health bar
     r.drawHealthBar(screen, screenX, screenY-10, char.Width, 5, char.Health, char.MaxHealth)
@@ -91,14 +108,14 @@ func (r *Renderer) drawCharacter(screen *ebiten.Image, char *Character, camera *
     }
 }
 
-func (r *Renderer) drawMonster(screen *ebiten.Image, monster *Monster, camera *Camera) {
+func (r *Renderer) drawMonster(screen *ebiten.Image, monster *units.Monster, camera *Camera) {
     pos := monster.Object.Position
     screenX, screenY := camera.WorldToScreen(pos.X, pos.Y)
 
     // Draw monster sprite
     op := &ebiten.DrawImageOptions{}
     op.GeoM.Translate(screenX, screenY)
-    screen.DrawImage(monster.Sprite, op)
+    screen.DrawImage(r.sprites["MONSTER"], op)
 
     // Draw health bar
     r.drawHealthBar(screen, screenX, screenY-10, monster.Width, 5, monster.Health, monster.MaxHealth)

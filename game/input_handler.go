@@ -1,4 +1,4 @@
-package main
+package game
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"
@@ -32,7 +32,7 @@ func (ih *InputHandler) HandleInput(world *World) {
 		dy += 1
 	}
 
-	player.Move(dx, dy, world)
+	player.Move(dx, dy)
 
 	// Handle attack input
 	if inpututil.IsKeyJustPressed(ebiten.KeyControl) {

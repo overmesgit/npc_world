@@ -1,6 +1,7 @@
-package main
+package game
 
 import (
+    "example.com/maj/units"
     "github.com/solarlune/resolv"
 )
 
@@ -14,7 +15,7 @@ func NewCamera() *Camera {
     }
 }
 
-func (c *Camera) Update(player *Character) {
+func (c *Camera) Update(player *units.Character) {
     if player != nil {
         playerPos := player.Object.Position
         c.Position.X = playerPos.X - 320 // Assuming 640x480 screen

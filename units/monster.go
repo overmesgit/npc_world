@@ -1,7 +1,6 @@
-package main
+package units
 
 import (
-    "github.com/hajimehoshi/ebiten/v2"
     "github.com/solarlune/resolv"
     "math"
     "math/rand"
@@ -14,54 +13,56 @@ type Monster struct {
     Direction      struct{ X, Y float64 }
     Health         int
     MaxHealth      int
-    Sprite         *ebiten.Image
     AttackRange    float64
     AttackDamage   int
     AttackCooldown time.Duration
     LastAttackTime time.Time
     Object         *resolv.Object
+    Den            *GoblinDen
+    WanderRadius   float64
 }
 
-func NewMonster(x, y float64, sprite *ebiten.Image) *Monster {
+func NewMonster(x, y float64, den *GoblinDen) *Monster {
     m := &Monster{
-        Width:          float64(TileSize),
-        Height:         float64(TileSize),
+        Width:          float64(32),
+        Height:         float64(32),
         Speed:          1.0,
         Direction:      struct{ X, Y float64 }{X: rand.Float64()*2 - 1, Y: rand.Float64()*2 - 1},
         Health:         100,
         MaxHealth:      100,
-        Sprite:         sprite,
-        AttackRange:    float64(TileSize * 1.5), // 1.5 tiles range
+        AttackRange:    float64(32 * 1.5),
         AttackDamage:   10,
-        AttackCooldown: time.Second * 2, // Attack every 2 seconds
+        AttackCooldown: time.Second * 2,
+        Den:            den,
+        WanderRadius:   float64(32 * 5), // 5 tiles radius
     }
-    m.Object = resolv.NewObject(x, y, float64(TileSize), float64(TileSize))
-    m.Object.SetShape(resolv.NewRectangle(0, 0, float64(TileSize), float64(TileSize)))
+    m.Object = resolv.NewObject(x, y, float64(32), float64(32))
+    m.Object.SetShape(resolv.NewRectangle(0, 0, float64(32), float64(32)))
     m.Object.AddTags("monster")
     return m
 }
 
-func (m *Monster) Update(w *World) {
+func (m *Monster) Update(chars []*Character) {
     if m.Health <= 0 {
         return
     }
 
-    nearestChar, distance := m.FindNearestCharacter(w)
+    nearestChar, distance := m.FindNearestCharacter(chars)
     if nearestChar != nil && distance <= m.AttackRange {
         m.AttackCharacter(nearestChar)
     } else if nearestChar != nil && distance <= m.AttackRange*2 {
         m.MoveTowards(nearestChar.Object)
     } else {
-        m.MoveRandomly()
+        m.WanderNearDen()
     }
 }
 
-func (m *Monster) FindNearestCharacter(w *World) (*Character, float64) {
+func (m *Monster) FindNearestCharacter(chars []*Character) (*Character, float64) {
     var nearestChar *Character
     minDistance := math.Inf(1)
 
-    for i := range w.characters {
-        char := &w.characters[i]
+    for i := range chars {
+        char := chars[i]
         distance := char.Object.Position.Distance(m.Object.Position)
 
         if distance < minDistance {
@@ -71,6 +72,20 @@ func (m *Monster) FindNearestCharacter(w *World) (*Character, float64) {
     }
 
     return nearestChar, minDistance
+}
+
+func (m *Monster) WanderNearDen() {
+    denPos := m.Den.Object.Position
+    monsterPos := m.Object.Position
+    distanceToDen := monsterPos.Distance(denPos)
+
+    if distanceToDen > m.WanderRadius {
+        // Move back towards den
+        m.MoveTowards(m.Den.Object)
+    } else {
+        // Wander randomly
+        m.MoveRandomly()
+    }
 }
 
 func (m *Monster) AttackCharacter(char *Character) {

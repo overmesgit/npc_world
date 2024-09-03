@@ -1,4 +1,4 @@
-package main
+package units
 
 import "time"
 
@@ -14,11 +14,11 @@ type Attack struct {
     HasDealtDamage   bool // New field to track if damage has been dealt
 }
 
-func NewAttack() Attack {
+func NewAttack(atackRange float64) Attack {
     return Attack{
         IsAttacking:      false,
         Message:          "Attack!",
-        Range:            float64(TileSize * 2), // 2 tiles range
+        Range:            atackRange,
         Damage:           20,
         AttackDuration:   500 * time.Millisecond,
         CooldownDuration: 2 * time.Second,
