@@ -19,42 +19,34 @@ type Game struct {
 }
 
 func NewGame() *Game {
-    monsterSprite, _, err := ebitenutil.NewImageFromFile("assets/monsters/tile_0_0.png")
-    if err != nil {
-        log.Fatal(err)
-    }
 
-    playerSprite, _, err := ebitenutil.NewImageFromFile("assets/rogues/tile_0_1.png")
-    if err != nil {
-        log.Fatal(err)
-    }
-    npcSprite, _, err := ebitenutil.NewImageFromFile("assets/rogues/tile_0_1.png")
-    if err != nil {
-        log.Fatal(err)
-    }
-
-    goblinDenSprite, _, err := ebitenutil.NewImageFromFile("assets/tiles/tile_7_16.png")
-    if err != nil {
-        log.Fatal(err)
-    }
-
-    world := game.NewWorld(monsterSprite, goblinDenSprite)
+    world := game.NewWorld()
 
     world.AddCharacter(units.NewCharacter(float64(3*game.TileSize), float64(3*game.TileSize), "Player"))
     world.AddCharacter(units.NewCharacter(float64(1*game.TileSize), float64(1*game.TileSize), "NPC1"))
     world.AddCharacter(units.NewCharacter(float64(2*game.TileSize), float64(2*game.TileSize), "NPC2"))
 
-    sprites := map[string]*ebiten.Image{
-        "NPC":     npcSprite,
-        "PLAYER":  playerSprite,
-        "DEN":     goblinDenSprite,
-        "MONSTER": monsterSprite,
+    chars, _, err := ebitenutil.NewImageFromFile("assets/rogues.png")
+    if err != nil {
+        log.Fatal(err)
+    }
+    monsters, _, err := ebitenutil.NewImageFromFile("assets/monsters.png")
+    if err != nil {
+        log.Fatal(err)
+    }
+    tiles, _, err := ebitenutil.NewImageFromFile("assets/tiles.png")
+    if err != nil {
+        log.Fatal(err)
     }
 
     return &Game{
-        world:        world,
-        camera:       game.NewCamera(),
-        renderer:     game.NewRenderer(sprites),
+        world:  world,
+        camera: game.NewCamera(),
+        renderer: game.NewRenderer(game.Sprites{
+            monsters,
+            chars,
+            tiles,
+        }),
         inputHandler: game.NewInputHandler(),
     }
 }

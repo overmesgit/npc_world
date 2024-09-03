@@ -8,16 +8,23 @@ import (
     "golang.org/x/image/font"
     "golang.org/x/image/font/gofont/goregular"
     "golang.org/x/image/font/opentype"
+    "image"
     "image/color"
     "log"
 )
 
 type Renderer struct {
     font    font.Face
-    sprites map[string]*ebiten.Image
+    sprites Sprites
 }
 
-func NewRenderer(sprites map[string]*ebiten.Image) *Renderer {
+type Sprites struct {
+    Monsters    *ebiten.Image
+    Characteres *ebiten.Image
+    Tiles       *ebiten.Image
+}
+
+func NewRenderer(sprites Sprites) *Renderer {
     tt, err := opentype.Parse(goregular.TTF)
     if err != nil {
         log.Fatal(err)
@@ -65,13 +72,19 @@ func (r *Renderer) Render(screen *ebiten.Image, world *World, camera *Camera) {
     }
 }
 
+func (r *Renderer) drawSprite(screen *ebiten.Image, sheet *ebiten.Image, indexX, indexY int, x, y float64) {
+    sx := indexX * 32
+    sy := indexY * 32
+    op := &ebiten.DrawImageOptions{}
+    op.GeoM.Translate(x, y)
+    screen.DrawImage(sheet.SubImage(image.Rect(sx, sy, sx+32, sy+32)).(*ebiten.Image), op)
+}
+
 func (r *Renderer) drawGoblinDen(screen *ebiten.Image, den *units.GoblinDen, camera *Camera) {
     pos := den.Object.Position
     screenX, screenY := camera.WorldToScreen(pos.X, pos.Y)
 
-    op := &ebiten.DrawImageOptions{}
-    op.GeoM.Translate(screenX, screenY)
-    screen.DrawImage(r.sprites["DEN"], op)
+    r.drawSprite(screen, r.sprites.Tiles, 0, 16, screenX, screenY)
 }
 
 func (r *Renderer) drawTile(screen *ebiten.Image, x, y int, tileType TileType, camera *Camera) {
@@ -92,9 +105,7 @@ func (r *Renderer) drawCharacter(screen *ebiten.Image, char *units.Character, ca
     screenX, screenY := camera.WorldToScreen(pos.X, pos.Y)
 
     // Draw character sprite
-    op := &ebiten.DrawImageOptions{}
-    op.GeoM.Translate(screenX, screenY)
-    screen.DrawImage(r.sprites["PLAYER"], op)
+    r.drawSprite(screen, r.sprites.Characteres, 0, 1, screenX, screenY)
 
     // Draw health bar
     r.drawHealthBar(screen, screenX, screenY-10, char.Width, 5, char.Health, char.MaxHealth)
@@ -113,9 +124,7 @@ func (r *Renderer) drawMonster(screen *ebiten.Image, monster *units.Monster, cam
     screenX, screenY := camera.WorldToScreen(pos.X, pos.Y)
 
     // Draw monster sprite
-    op := &ebiten.DrawImageOptions{}
-    op.GeoM.Translate(screenX, screenY)
-    screen.DrawImage(r.sprites["MONSTER"], op)
+    r.drawSprite(screen, r.sprites.Monsters, 0, 0, screenX, screenY)
 
     // Draw health bar
     r.drawHealthBar(screen, screenX, screenY-10, monster.Width, 5, monster.Health, monster.MaxHealth)

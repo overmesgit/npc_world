@@ -17,16 +17,14 @@ type World struct {
     Space           *resolv.Space
 }
 
-func NewWorld(monsterSprite, goblinDenSprite *ebiten.Image) *World {
+func NewWorld() *World {
     gameMap := NewGameMap()
     w := &World{
-        Characters:      make([]*units.Character, 0),
-        Monsters:        make([]*units.Monster, 0),
-        GoblinDens:      make([]*units.GoblinDen, 0),
-        GameMap:         gameMap,
-        MonsterSprite:   monsterSprite,
-        GoblinDenSprite: goblinDenSprite,
-        Space:           resolv.NewSpace(gameMap.Width*TileSize, gameMap.Height*TileSize, TileSize, TileSize),
+        Characters: make([]*units.Character, 0),
+        Monsters:   make([]*units.Monster, 0),
+        GoblinDens: make([]*units.GoblinDen, 0),
+        GameMap:    gameMap,
+        Space:      resolv.NewSpace(gameMap.Width*TileSize, gameMap.Height*TileSize, TileSize, TileSize),
     }
     w.initializeCollisionSpace()
     w.spawnGoblinDens(3) // Spawn 3 goblin dens
