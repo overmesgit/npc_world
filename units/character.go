@@ -79,8 +79,7 @@ func (c *Character) PerformAttack() {
             continue // Skip self
         }
 
-        distance := c.Object.Position.Distance(obj.Position)
-        fmt.Println(obj, distance)
+        distance := c.Object.Center().Distance(obj.Center())
         if distance <= c.Attack.Range {
             switch {
             case obj.HasTags("monster"):

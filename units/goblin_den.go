@@ -20,7 +20,7 @@ type GoblinDen struct {
 func NewGoblinDen(x, y float64) *GoblinDen {
     den := &GoblinDen{
         SpawnCooldown:   time.Second * 10,
-        LastSpawnTime:   time.Now(),
+        LastSpawnTime:   time.Now().Add(-time.Second * 8),
         MaxMonsters:     5,
         CurrentMonsters: 0,
         Health:          100, // Add this line
@@ -29,7 +29,7 @@ func NewGoblinDen(x, y float64) *GoblinDen {
     size := float64(32)
     den.Object = resolv.NewObject(x, y, size, size)
     den.Object.SetShape(resolv.NewRectangle(0, 0, size, size))
-    den.Object.AddTags("goblin_den")
+    den.Object.AddTags("goblin_den", "mountain")
     den.Object.Data = den
     return den
 }

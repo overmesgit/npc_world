@@ -64,7 +64,7 @@ func (m *Monster) FindNearestCharacter(chars []*Character) (*Character, float64)
 
     for i := range chars {
         char := chars[i]
-        distance := char.Object.Position.Distance(m.Object.Position)
+        distance := char.Object.Center().Distance(m.Object.Center())
 
         if distance < minDistance {
             minDistance = distance
@@ -76,8 +76,8 @@ func (m *Monster) FindNearestCharacter(chars []*Character) (*Character, float64)
 }
 
 func (m *Monster) WanderNearDen() {
-    denPos := m.Den.Object.Position
-    monsterPos := m.Object.Position
+    denPos := m.Den.Object.Center()
+    monsterPos := m.Object.Center()
     distanceToDen := monsterPos.Distance(denPos)
 
     if distanceToDen > m.WanderRadius {
@@ -98,7 +98,7 @@ func (m *Monster) AttackCharacter(char *Character) {
 
 func (m *Monster) MoveTowards(object *resolv.Object) {
     position := m.Object.Position
-    distance := position.Distance(object.Position)
+    distance := m.Object.Center().Distance(object.Center())
 
     if distance > 0 {
         sub := object.Position.Sub(position)
@@ -117,7 +117,8 @@ func (m *Monster) TryMove(newX, newY float64) bool {
     dx := newX - position.X
     dy := newY - position.Y
 
-    if collision := m.Object.Check(dx, dy, "mountain", "character"); collision == nil {
+    collision := m.Object.Check(dx, dy, "mountain")
+    if collision == nil {
         m.Object.Position.X = newX
         m.Object.Position.Y = newY
         m.Object.Update()
