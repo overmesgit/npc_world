@@ -32,7 +32,12 @@ func (ih *InputHandler) HandleInput(world *World) {
 		dy += 1
 	}
 
-	player.Move(dx, dy)
+	speedMultiplier := 1.0
+    if ebiten.IsKeyPressed(ebiten.KeyShift) {
+        speedMultiplier = 3.0
+    }
+
+    player.Move(dx*speedMultiplier, dy*speedMultiplier)
 
 	// Handle attack input
 	if inpututil.IsKeyJustPressed(ebiten.KeyControl) {
