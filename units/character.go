@@ -1,6 +1,7 @@
 package units
 
 import (
+    "fmt"
     "github.com/solarlune/resolv"
     "math"
 )
@@ -58,20 +59,40 @@ func (c *Character) TakeDamage(amount int) {
     }
 }
 
-func (c *Character) Update(monsters []*Monster) {
+func (c *Character) Update() {
     c.Attack.Update()
     if c.Attack.IsAttacking && !c.Attack.HasDealtDamage {
-        c.PerformAttack(monsters)
+        c.PerformAttack()
         c.Attack.HasDealtDamage = true // Set this flag after dealing damage
     }
 }
 
-func (c *Character) PerformAttack(monsters []*Monster) {
-    for _, monster := range monsters {
-        distance := c.Object.Position.Distance(monster.Object.Position)
+func (c *Character) PerformAttack() {
+    checkX := c.Object.Position.X - c.Attack.Range
+    checkY := c.Object.Position.Y - c.Attack.Range
+    checkSize := c.Attack.Range * 2
+    nearbyObjects := c.Object.Space.CheckWorld(checkX, checkY, checkSize, checkSize,
+        "monster", "goblin_den")
 
+    for _, obj := range nearbyObjects {
+        if obj == c.Object {
+            continue // Skip self
+        }
+
+        distance := c.Object.Position.Distance(obj.Position)
+        fmt.Println(obj, distance)
         if distance <= c.Attack.Range {
-            monster.TakeDamage(c.Attack.Damage)
+            switch {
+            case obj.HasTags("monster"):
+                if monster, ok := obj.Data.(*Monster); ok {
+                    monster.TakeDamage(c.Attack.Damage)
+                }
+            case obj.HasTags("goblin_den"):
+                if den, ok := obj.Data.(*GoblinDen); ok {
+                    fmt.Println("den", c.Attack.Damage)
+                    den.TakeDamage(c.Attack.Damage)
+                }
+            }
         }
     }
 }

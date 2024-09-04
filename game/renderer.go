@@ -85,6 +85,9 @@ func (r *Renderer) drawGoblinDen(screen *ebiten.Image, den *units.GoblinDen, cam
     screenX, screenY := camera.WorldToScreen(pos.X, pos.Y)
 
     r.drawSprite(screen, r.sprites.Tiles, 0, 16, screenX, screenY)
+
+    // Draw health bar for goblin den
+    r.drawHealthBar(screen, screenX, screenY-10, float64(TileSize), 5, den.Health, den.MaxHealth)
 }
 
 func (r *Renderer) drawTile(screen *ebiten.Image, x, y int, tileType TileType, camera *Camera) {

@@ -27,18 +27,21 @@ func NewWorld() *World {
         Space:      resolv.NewSpace(gameMap.Width*TileSize, gameMap.Height*TileSize, TileSize, TileSize),
     }
     w.initializeCollisionSpace()
-    w.spawnGoblinDens(3) // Spawn 3 goblin dens
+    w.spawnGoblinDens(10) // Spawn 3 goblin dens
     return w
 }
 
 func (w *World) Update() {
     for i := range w.Characters {
-        w.Characters[i].Update(w.Monsters)
+        w.Characters[i].Update()
     }
 
     for _, den := range w.GoblinDens {
         newMonsters := den.Update()
         w.Monsters = append(w.Monsters, newMonsters...)
+        for _, m := range newMonsters {
+            w.Space.Add(m.Object)
+        }
     }
 
     // Update Monsters and remove dead ones
@@ -47,9 +50,21 @@ func (w *World) Update() {
         monster.Update(w.Characters)
         if monster.Health > 0 {
             aliveMonsters = append(aliveMonsters, monster)
+        } else {
+            w.Space.Remove(monster.Object)
         }
     }
     w.Monsters = aliveMonsters
+
+    aliveDens := make([]*units.GoblinDen, 0)
+    for _, den := range w.GoblinDens {
+        if den.Health > 0 {
+            aliveDens = append(aliveDens, den)
+        } else {
+            w.Space.Remove(den.Object)
+        }
+    }
+    w.GoblinDens = aliveDens
 }
 
 func (w *World) spawnGoblinDens(count int) {

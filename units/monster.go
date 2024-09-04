@@ -39,6 +39,7 @@ func NewMonster(x, y float64, den *GoblinDen) *Monster {
     m.Object = resolv.NewObject(x, y, float64(32), float64(32))
     m.Object.SetShape(resolv.NewRectangle(0, 0, float64(32), float64(32)))
     m.Object.AddTags("monster")
+    m.Object.Data = m
     return m
 }
 
@@ -150,6 +151,5 @@ func (m *Monster) TakeDamage(amount int) {
     m.Health -= amount
     if m.Health < 0 {
         m.Health = 0
-        m.Object.Space.Remove(m.Object)
     }
 }
