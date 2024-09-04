@@ -56,19 +56,21 @@ func (r *Renderer) Render(screen *ebiten.Image, world *World, camera *Camera) {
         }
     }
 
-    // Draw Characters
-    for _, char := range world.GetCharacters() {
-        r.drawCharacter(screen, char, camera)
-    }
-
-    // Draw Monsters
-    for _, monster := range world.Monsters {
-        r.drawMonster(screen, monster, camera)
-    }
-
-    // Draw goblin dens
-    for _, den := range world.GoblinDens {
-        r.drawGoblinDen(screen, den, camera)
+    for _, obj := range world.Space.Objects() {
+        switch obj.Data.(type) {
+        case *units.Character:
+            character := obj.Data.(*units.Character)
+            r.drawCharacter(screen, character, camera)
+        case *units.Monster:
+            monster := obj.Data.(*units.Monster)
+            r.drawMonster(screen, monster, camera)
+        case *units.GoblinDen:
+            den := obj.Data.(*units.GoblinDen)
+            r.drawGoblinDen(screen, den, camera)
+        case *Mushroom:
+            mushroom := obj.Data.(*Mushroom)
+            r.drawMushroom(screen, mushroom, camera)
+        }
     }
 }
 
@@ -88,6 +90,12 @@ func (r *Renderer) drawGoblinDen(screen *ebiten.Image, den *units.GoblinDen, cam
 
     // Draw health bar for goblin den
     r.drawHealthBar(screen, screenX, screenY-10, float64(TileSize), 5, den.Health, den.MaxHealth)
+}
+
+func (r *Renderer) drawMushroom(screen *ebiten.Image, mushroom *Mushroom, camera *Camera) {
+    pos := mushroom.Object.Position
+    screenX, screenY := camera.WorldToScreen(pos.X, pos.Y)
+    r.drawSprite(screen, r.sprites.Tiles, 0, 20, screenX, screenY)
 }
 
 func (r *Renderer) drawTile(screen *ebiten.Image, x, y int, tileType TileType, camera *Camera) {

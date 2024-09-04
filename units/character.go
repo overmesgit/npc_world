@@ -1,7 +1,6 @@
 package units
 
 import (
-    "fmt"
     "github.com/solarlune/resolv"
     "math"
 )
@@ -19,7 +18,7 @@ type Character struct {
 }
 
 func NewCharacter(x, y float64, name string) *Character {
-    c := Character{
+    c := &Character{
         Name:      name,
         Speed:     2.0,
         IsPlayer:  name == "Player",
@@ -32,7 +31,8 @@ func NewCharacter(x, y float64, name string) *Character {
     c.Object = resolv.NewObject(x, y, float64(32), float64(32))
     c.Object.SetShape(resolv.NewRectangle(0, 0, float64(32), float64(32)))
     c.Object.AddTags("character")
-    return &c
+    c.Object.Data = c
+    return c
 }
 
 func (c *Character) Move(dx, dy float64) {
@@ -63,7 +63,7 @@ func (c *Character) Update() {
     c.Attack.Update()
     if c.Attack.IsAttacking && !c.Attack.HasDealtDamage {
         c.PerformAttack()
-        c.Attack.HasDealtDamage = true // Set this flag after dealing damage
+        c.Attack.HasDealtDamage = true
     }
 }
 
@@ -74,10 +74,12 @@ func (c *Character) PerformAttack() {
     nearbyObjects := c.Object.Space.CheckWorld(checkX, checkY, checkSize, checkSize,
         "monster", "goblin_den")
 
+    seenObj := make(map[*resolv.Object]bool, 0)
     for _, obj := range nearbyObjects {
-        if obj == c.Object {
-            continue // Skip self
+        if obj == c.Object || seenObj[obj] {
+            continue
         }
+        seenObj[obj] = true
 
         distance := c.Object.Center().Distance(obj.Center())
         if distance <= c.Attack.Range {
@@ -88,10 +90,29 @@ func (c *Character) PerformAttack() {
                 }
             case obj.HasTags("goblin_den"):
                 if den, ok := obj.Data.(*GoblinDen); ok {
-                    fmt.Println("den", c.Attack.Damage)
                     den.TakeDamage(c.Attack.Damage)
                 }
             }
         }
     }
+}
+
+func (c *Character) Take() {
+    collisions := c.Object.Check(0, 0, "mushroom")
+    if collisions != nil {
+        for _, obj := range collisions.Objects {
+            switch {
+            case obj.HasTags("mushroom"):
+                c.Health = min(c.Health+20, 120)
+                obj.Space.Remove(obj)
+            }
+        }
+    }
+}
+
+func min(a, b int) int {
+    if a < b {
+        return a
+    }
+    return b
 }

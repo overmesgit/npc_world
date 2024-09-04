@@ -5,73 +5,83 @@ import (
     "github.com/hajimehoshi/ebiten/v2"
     "github.com/solarlune/resolv"
     "math/rand"
+    "time"
 )
 
+// Add new struct
+type Mushroom struct {
+    Object *resolv.Object
+}
+
 type World struct {
-    Characters      []*units.Character
-    Monsters        []*units.Monster
-    GoblinDens      []*units.GoblinDen
     GameMap         *GameMap
     MonsterSprite   *ebiten.Image
     GoblinDenSprite *ebiten.Image
     Space           *resolv.Space
+    Player          *units.Character
 }
 
 func NewWorld() *World {
     gameMap := NewGameMap()
     w := &World{
-        Characters: make([]*units.Character, 0),
-        Monsters:   make([]*units.Monster, 0),
-        GoblinDens: make([]*units.GoblinDen, 0),
-        GameMap:    gameMap,
-        Space:      resolv.NewSpace(gameMap.Width*TileSize, gameMap.Height*TileSize, TileSize, TileSize),
+        GameMap: gameMap,
+        Space:   resolv.NewSpace(gameMap.Width*TileSize, gameMap.Height*TileSize, TileSize, TileSize),
     }
     w.initializeCollisionSpace()
-    w.spawnGoblinDens(10) // Spawn 3 goblin dens
+    w.spawnGoblinDens(10)
+    w.spawnMushrooms(30)
+    go w.mushroomSpawnRoutine()
     return w
 }
 
 func (w *World) Update() {
-    for i := range w.Characters {
-        w.Characters[i].Update()
-    }
-
-    for _, den := range w.GoblinDens {
-        newMonsters := den.Update()
-        w.Monsters = append(w.Monsters, newMonsters...)
-        for _, m := range newMonsters {
-            w.Space.Add(m.Object)
+    for _, obj := range w.Space.Objects() {
+        switch obj.Data.(type) {
+        case *units.Character:
+            character := obj.Data.(*units.Character)
+            character.Update()
+        case *units.Monster:
+            monster := obj.Data.(*units.Monster)
+            monster.Update()
+            if monster.Health <= 0 {
+                w.Space.Remove(monster.Object)
+            }
+        case *units.GoblinDen:
+            den := obj.Data.(*units.GoblinDen)
+            newMonsters := den.Update()
+            for _, m := range newMonsters {
+                w.Space.Add(m.Object)
+            }
+            if den.Health <= 0 {
+                w.Space.Remove(den.Object)
+            }
         }
     }
+}
 
-    // Update Monsters and remove dead ones
-    aliveMonsters := make([]*units.Monster, 0)
-    for _, monster := range w.Monsters {
-        monster.Update(w.Characters)
-        if monster.Health > 0 {
-            aliveMonsters = append(aliveMonsters, monster)
-        } else {
-            w.Space.Remove(monster.Object)
+func (w *World) spawnMushrooms(count int) {
+    for i := 0; i < count; i++ {
+        x, y := w.findValidSpawnPoint()
+        mushroom := &Mushroom{
+            Object: resolv.NewObject(float64(x*TileSize), float64(y*TileSize), float64(TileSize), float64(TileSize)),
         }
+        mushroom.Object.AddTags("mushroom")
+        mushroom.Object.Data = mushroom
+        w.Space.Add(mushroom.Object)
     }
-    w.Monsters = aliveMonsters
+}
 
-    aliveDens := make([]*units.GoblinDen, 0)
-    for _, den := range w.GoblinDens {
-        if den.Health > 0 {
-            aliveDens = append(aliveDens, den)
-        } else {
-            w.Space.Remove(den.Object)
-        }
+func (w *World) mushroomSpawnRoutine() {
+    ticker := time.NewTicker(3 * time.Second)
+    for range ticker.C {
+        w.spawnMushrooms(1)
     }
-    w.GoblinDens = aliveDens
 }
 
 func (w *World) spawnGoblinDens(count int) {
     for i := 0; i < count; i++ {
         x, y := w.findValidSpawnPoint()
         den := units.NewGoblinDen(float64(x*TileSize), float64(y*TileSize))
-        w.GoblinDens = append(w.GoblinDens, den)
         w.Space.Add(den.Object)
     }
 }
@@ -111,18 +121,12 @@ func (w *World) IsSpawnPointValid(xTile, yTile int) bool {
 }
 
 func (w *World) AddCharacter(c *units.Character) {
-    w.Characters = append(w.Characters, c)
+    if w.Player == nil {
+        w.Player = c
+    }
     w.Space.Add(c.Object)
 }
 
-func (w *World) GetCharacters() []*units.Character {
-    return w.Characters
-}
-
 func (w *World) GetPlayerCharacter() *units.Character {
-    // Assuming the first character is always the player
-    if len(w.Characters) > 0 {
-        return w.Characters[0]
-    }
-    return nil
+    return w.Player
 }

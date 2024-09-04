@@ -31,7 +31,7 @@ func (a *Attack) TriggerAttack() bool {
         a.IsAttacking = true
         a.AttackTimer = time.Now().Add(a.AttackDuration)
         a.CooldownTimer = time.Now().Add(a.CooldownDuration)
-        a.HasDealtDamage = false // Reset this flag when starting a new attack
+        a.HasDealtDamage = false
         return true
     }
     return false

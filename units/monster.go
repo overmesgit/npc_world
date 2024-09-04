@@ -1,6 +1,7 @@
 package units
 
 import (
+    "fmt"
     "github.com/solarlune/resolv"
     "math"
     "math/rand"
@@ -8,33 +9,31 @@ import (
 )
 
 type Monster struct {
-    Width, Height  float64
-    Speed          float64
-    Direction      struct{ X, Y float64 }
-    Health         int
-    MaxHealth      int
-    AttackRange    float64
-    AttackDamage   int
-    AttackCooldown time.Duration
-    LastAttackTime time.Time
-    Object         *resolv.Object
-    Den            *GoblinDen
-    WanderRadius   float64
+    Width, Height float64
+    Speed         float64
+    Direction     struct{ X, Y float64 }
+    Health        int
+    MaxHealth     int
+    Attack        Attack
+    Object        *resolv.Object
+    Den           *GoblinDen
+    WanderRadius  float64
 }
 
 func NewMonster(x, y float64, den *GoblinDen) *Monster {
+    attack := NewAttack(float64(32 * 1.5))
+    attack.Damage = 10
+    attack.CooldownDuration = time.Second * 2
     m := &Monster{
-        Width:          float64(32),
-        Height:         float64(32),
-        Speed:          1.0,
-        Direction:      struct{ X, Y float64 }{X: rand.Float64()*2 - 1, Y: rand.Float64()*2 - 1},
-        Health:         100,
-        MaxHealth:      100,
-        AttackRange:    float64(32 * 1.5),
-        AttackDamage:   10,
-        AttackCooldown: time.Second * 2,
-        Den:            den,
-        WanderRadius:   float64(32 * 5), // 5 tiles radius
+        Width:        float64(32),
+        Height:       float64(32),
+        Speed:        1.0,
+        Direction:    struct{ X, Y float64 }{X: rand.Float64()*2 - 1, Y: rand.Float64()*2 - 1},
+        Health:       100,
+        MaxHealth:    100,
+        Attack:       attack,
+        Den:          den,
+        WanderRadius: float64(32 * 5), // 5 tiles radius
     }
     m.Object = resolv.NewObject(x, y, float64(32), float64(32))
     m.Object.SetShape(resolv.NewRectangle(0, 0, float64(32), float64(32)))
@@ -43,32 +42,42 @@ func NewMonster(x, y float64, den *GoblinDen) *Monster {
     return m
 }
 
-func (m *Monster) Update(chars []*Character) {
+func (m *Monster) Update() {
     if m.Health <= 0 {
         return
     }
 
-    nearestChar, distance := m.FindNearestCharacter(chars)
-    if nearestChar != nil && distance <= m.AttackRange {
+    nearestChar, distance := m.FindNearestCharacter()
+    if nearestChar != nil && distance <= m.Attack.Range {
         m.AttackCharacter(nearestChar)
-    } else if nearestChar != nil && distance <= m.AttackRange*2 {
+    } else if nearestChar != nil && distance <= m.Attack.Range*4 {
         m.MoveTowards(nearestChar.Object)
     } else {
         m.WanderNearDen()
     }
 }
 
-func (m *Monster) FindNearestCharacter(chars []*Character) (*Character, float64) {
+func (m *Monster) FindNearestCharacter() (*Character, float64) {
     var nearestChar *Character
     minDistance := math.Inf(1)
 
-    for i := range chars {
-        char := chars[i]
-        distance := char.Object.Center().Distance(m.Object.Center())
+    checkX := m.Object.Position.X - 3*m.Attack.Range
+    checkY := m.Object.Position.Y - 3*m.Attack.Range
+    checkSize := m.Attack.Range * 6
+    nearbyObjects := m.Object.Space.CheckWorld(checkX, checkY, checkSize, checkSize,
+        "character")
 
-        if distance < minDistance {
-            minDistance = distance
-            nearestChar = char
+    for _, obj := range nearbyObjects {
+        fmt.Println(obj)
+        if obj == m.Object {
+            continue
+        }
+        if char, ok := obj.Data.(*Character); ok {
+            distance := char.Object.Center().Distance(m.Object.Center())
+            if distance < minDistance {
+                minDistance = distance
+                nearestChar = char
+            }
         }
     }
 
@@ -90,9 +99,10 @@ func (m *Monster) WanderNearDen() {
 }
 
 func (m *Monster) AttackCharacter(char *Character) {
-    if time.Since(m.LastAttackTime) >= m.AttackCooldown {
-        char.TakeDamage(m.AttackDamage)
-        m.LastAttackTime = time.Now()
+    m.Attack.TriggerAttack()
+    if m.Attack.IsAttacking && !m.Attack.HasDealtDamage {
+        char.TakeDamage(m.Attack.Damage)
+        m.Attack.HasDealtDamage = true
     }
 }
 
