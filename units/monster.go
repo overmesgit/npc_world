@@ -1,7 +1,6 @@
 package units
 
 import (
-    "fmt"
     "github.com/solarlune/resolv"
     "math"
     "math/rand"
@@ -68,7 +67,6 @@ func (m *Monster) FindNearestCharacter() (*Character, float64) {
         "character")
 
     for _, obj := range nearbyObjects {
-        fmt.Println(obj)
         if obj == m.Object {
             continue
         }

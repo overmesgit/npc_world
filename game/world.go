@@ -87,9 +87,10 @@ func (w *World) spawnGoblinDens(count int) {
 }
 
 func (w *World) findValidSpawnPoint() (int, int) {
+    offset := 5
     for {
-        x := rand.Intn(w.GameMap.Width)
-        y := rand.Intn(w.GameMap.Height)
+        x := rand.Intn(w.GameMap.Width-2*offset) + offset
+        y := rand.Intn(w.GameMap.Height-2*offset) + offset
         if w.IsSpawnPointValid(x, y) {
             return x, y
         }
