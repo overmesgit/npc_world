@@ -1,20 +1,28 @@
 package units
 
 import (
+    "example.com/maj/ai"
+    "fmt"
     "github.com/solarlune/resolv"
     "math"
+    "time"
 )
 
 type Character struct {
-    Name      string
-    Speed     float64
-    IsPlayer  bool
-    Width     float64
-    Height    float64
-    Attack    Attack
-    Health    int
-    MaxHealth int
-    Object    *resolv.Object
+    Name          string
+    Speed         float64
+    IsPlayer      bool
+    Width         float64
+    Height        float64
+    Attack        Attack
+    Health        int
+    MaxHealth     int
+    Object        *resolv.Object
+    Planner       *ai.GOAPPlanner
+    CurrentPlan   []ai.GOAPAction
+    TargetMonster *Monster
+    WanderTarget  resolv.Vector
+    WanderTime    time.Time
 }
 
 func NewCharacter(x, y float64, name string) *Character {
@@ -32,10 +40,14 @@ func NewCharacter(x, y float64, name string) *Character {
     c.Object.SetShape(resolv.NewRectangle(0, 0, float64(32), float64(32)))
     c.Object.AddTags("character")
     c.Object.Data = c
+
+    if !c.IsPlayer {
+        InitNPCGOAP(c)
+    }
     return c
 }
 
-func (c *Character) Move(dx, dy float64) {
+func (c *Character) Move(dx, dy float64) bool {
     if dx != 0 && dy != 0 {
         magnitude := math.Sqrt(dx*dx + dy*dy)
         dx /= magnitude
@@ -49,6 +61,9 @@ func (c *Character) Move(dx, dy float64) {
         c.Object.Position.X = newX
         c.Object.Position.Y = newY
         c.Object.Update()
+        return true
+    } else {
+        return false
     }
 }
 
@@ -61,9 +76,28 @@ func (c *Character) TakeDamage(amount int) {
 
 func (c *Character) Update() {
     c.Attack.Update()
-    if c.Attack.IsAttacking && !c.Attack.HasDealtDamage {
-        c.PerformAttack()
-        c.Attack.HasDealtDamage = true
+
+    if c.IsPlayer {
+        // Player update logic (controlled by input)
+        if c.Attack.IsAttacking && !c.Attack.HasDealtDamage {
+            c.PerformAttack()
+            c.Attack.HasDealtDamage = true
+        }
+    } else {
+        // NPC update logic using GOAP
+        currentState := c.UpdateGOAPState()
+        goalState := c.GenerateGOAPGoal(currentState)
+
+        fmt.Println(currentState, goalState)
+        c.CurrentPlan = c.Planner.Plan(currentState, goalState)
+        if c.CurrentPlan == nil {
+            return
+        }
+
+        action := c.CurrentPlan[0]
+        fmt.Println(c.Name, action)
+        c.ExecuteGOAPAction(action)
+        c.CurrentPlan = c.CurrentPlan[1:]
     }
 }
 
