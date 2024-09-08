@@ -26,6 +26,10 @@ func NewGame() *Game {
     world := game.NewWorld()
     world.AddCharacter(units.NewCharacter(float64(3*gamemap.TileSize), float64(3*gamemap.TileSize), "Player"))
     world.AddCharacter(units.NewCharacter(float64(4*gamemap.TileSize), float64(4*gamemap.TileSize), "NPC1"))
+    world.AddCharacter(units.NewCharacter(float64(4*gamemap.TileSize), float64(4*gamemap.TileSize), "NPC2"))
+    world.AddCharacter(units.NewCharacter(float64(4*gamemap.TileSize), float64(4*gamemap.TileSize), "NPC3"))
+    world.AddCharacter(units.NewCharacter(float64(4*gamemap.TileSize), float64(4*gamemap.TileSize), "NPC4"))
+    world.AddCharacter(units.NewCharacter(float64(4*gamemap.TileSize), float64(4*gamemap.TileSize), "NPC5"))
 
     chars, _, err := ebitenutil.NewImageFromFile("assets/rogues.png")
     if err != nil {

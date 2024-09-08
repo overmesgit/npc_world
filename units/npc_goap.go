@@ -2,7 +2,6 @@ package units
 
 import (
     "example.com/maj/ai"
-    "fmt"
     "github.com/solarlune/resolv"
     "math"
     "math/rand"
@@ -17,6 +16,8 @@ const (
     MoveToTarget    = "MoveToTarget"
     AttackMonster   = "AttackMonster"
     Wander          = "Wander"
+    MoveToDen       = "MoveToDen"
+    AttackDen       = "AttackDen"
 )
 
 func InitNPCGOAP(npc *Character) {
@@ -80,6 +81,24 @@ func InitNPCGOAP(npc *Character) {
     })
 
     npc.Planner.AddAction(ai.GOAPAction{
+        Name: MoveToDen,
+        CostFunc: func(state ai.GOAPState) float64 {
+            return 4
+        },
+        Preconditions: ai.GOAPState{"seeGoblinDen": true},
+        Effects:       ai.GOAPState{"denInAttackRange": true},
+    })
+
+    npc.Planner.AddAction(ai.GOAPAction{
+        Name: AttackDen,
+        CostFunc: func(state ai.GOAPState) float64 {
+            return 4
+        },
+        Preconditions: ai.GOAPState{"denInAttackRange": true},
+        Effects:       ai.GOAPState{"hasDefeatedDen": true},
+    })
+
+    npc.Planner.AddAction(ai.GOAPAction{
         Name: Wander,
         CostFunc: func(state ai.GOAPState) float64 {
             return 6
@@ -96,14 +115,16 @@ func (npc *Character) UpdateGOAPState() ai.GOAPState {
     }
 
     state := ai.GOAPState{
-        "lowHealth":       npc.Health < int(float32(npc.MaxHealth)*0.3),
-        "hasFullHealth":   npc.Health == npc.MaxHealth,
-        "inDanger":        npc.IsInDanger(),
-        "hasTarget":       npc.HasTarget(),
-        "inAttackRange":   npc.IsInAttackRange(),
-        "monstersArround": npc.IsMonstersArround(),
-        "mushroomNear":    npc.IsMushroomHere(),
-        "seeMushroom":     npc.IsMushroomNear(),
+        "lowHealth":        npc.Health < int(float32(npc.MaxHealth)*0.3),
+        "hasFullHealth":    npc.Health == npc.MaxHealth,
+        "inDanger":         npc.IsInDanger(),
+        "hasTarget":        npc.HasTarget(),
+        "inAttackRange":    npc.IsInAttackRange(),
+        "monstersArround":  npc.IsMonstersArround(),
+        "mushroomNear":     npc.IsMushroomHere(),
+        "seeMushroom":      npc.IsMushroomNear(),
+        "denInAttackRange": npc.DenInAttackRange(),
+        "seeGoblinDen":     npc.seeGoblinDen(),
     }
     return state
 }
@@ -119,6 +140,10 @@ func (npc *Character) GenerateGOAPGoal(currentState ai.GOAPState) ai.GOAPState {
         return ai.GOAPState{"inAttackRange": true}
     } else if currentState["monstersArround"].(bool) {
         return ai.GOAPState{"hasTarget": true}
+    } else if currentState["denInAttackRange"].(bool) {
+        return ai.GOAPState{"hasDefeatedDen": true}
+    } else if currentState["seeGoblinDen"].(bool) {
+        return ai.GOAPState{"denInAttackRange": true}
     } else {
         return ai.GOAPState{"monstersArround": true}
     }
@@ -126,31 +151,39 @@ func (npc *Character) GenerateGOAPGoal(currentState ai.GOAPState) ai.GOAPState {
 
 func (npc *Character) ExecuteGOAPAction(action ai.GOAPAction) {
     switch action.Name {
-    case "RunToSafety":
+    case RunToSafety:
         npc.RunToSafety()
-    case "LookForMushroom":
+    case LookForMushroom:
         npc.LookForMushroom()
-    case "TakeMushroom":
+    case TakeMushroom:
         npc.Take()
-    case "FindMonster":
+    case FindMonster:
         npc.FindMonster()
-    case "MoveToTarget":
+    case MoveToTarget:
         npc.MoveTowards(npc.TargetMonster.Object.Center())
-    case "AttackMonster":
+    case AttackMonster:
         npc.AttackMonster()
-    case "Wander":
+    case Wander:
         npc.Wander()
+    case MoveToDen:
+        npc.MoveTowardsDen()
+    case AttackDen:
+        npc.AttackDen()
     }
 }
 
 func (npc *Character) IsMushroomHere() bool {
     _, distance := FindNearest(npc.Object, 32, "mushroom")
-    fmt.Println("distance", distance)
     return distance < 16
 }
 
 func (npc *Character) IsMushroomNear() bool {
     nearbyMonsters := FindAll(npc.Object, 6*32, "mushroom")
+    return len(nearbyMonsters) > 0
+}
+
+func (npc *Character) seeGoblinDen() bool {
+    nearbyMonsters := FindAll(npc.Object, 6*32, "goblin_den")
     return len(nearbyMonsters) > 0
 }
 
@@ -174,6 +207,11 @@ func (npc *Character) IsInAttackRange() bool {
         return false
     }
     distance := npc.Object.Center().Distance(npc.TargetMonster.Object.Center())
+    return distance <= npc.Attack.Range
+}
+
+func (npc *Character) DenInAttackRange() bool {
+    _, distance := FindNearest(npc.Object, npc.Attack.Range, "goblin_den")
     return distance <= npc.Attack.Range
 }
 
@@ -226,7 +264,26 @@ func (npc *Character) AttackMonster() {
     }
 }
 
+func (npc *Character) AttackDen() {
+    denObj, distance := FindNearest(npc.Object, npc.Attack.Range, "goblin_den")
+    if denObj != nil && distance <= npc.Attack.Range {
+        npc.Attack.TriggerAttack()
+        if npc.Attack.IsAttacking && !npc.Attack.HasDealtDamage {
+            denObj.Data.(*GoblinDen).TakeDamage(npc.Attack.Damage)
+            npc.Attack.HasDealtDamage = true
+        }
+    }
+}
+
 func (npc *Character) MoveTowards(target resolv.Vector) {
     direction := target.Sub(npc.Object.Center()).Unit()
     npc.Move(direction.X, direction.Y)
+}
+
+func (npc *Character) MoveTowardsDen() {
+    denObj, _ := FindNearest(npc.Object, 6*32, "goblin_den")
+    if denObj != nil {
+        direction := denObj.Center().Sub(npc.Object.Center()).Unit()
+        npc.Move(direction.X, direction.Y)
+    }
 }
