@@ -112,6 +112,16 @@ func (r *Renderer) drawTile(screen *ebiten.Image, x, y int, tileType gamemap.Til
     case gamemap.TileMountain:
         ebitenutil.DrawRect(screen, screenX, screenY, float64(gamemap.TileSize), float64(gamemap.TileSize), color.RGBA{139, 69, 19, 255}) // Saddle brown
     }
+
+    borderColor := color.RGBA{0, 0, 0, 255} // Black border
+    vector.StrokeRect(screen,
+        float32(screenX),
+        float32(screenY),
+        float32(gamemap.TileSize),
+        float32(gamemap.TileSize),
+        1,
+        borderColor,
+        false)
 }
 
 func (r *Renderer) drawCharacter(screen *ebiten.Image, char *units.Character, camera *Camera) {
@@ -163,14 +173,14 @@ func (r *Renderer) drawViewField(screen *ebiten.Image, character *units.Characte
 
     screenX, screenY := camera.WorldToScreen(checkX, checkY)
 
-//    ebitenutil.DrawRect(
-//        screen,
-//        screenX,
-//        screenY,
-//        checkSize,
-//        checkSize,
-//        color.RGBA{0, 255, 0, 64},
-//    )
+    //    ebitenutil.DrawRect(
+    //        screen,
+    //        screenX,
+    //        screenY,
+    //        checkSize,
+    //        checkSize,
+    //        color.RGBA{0, 255, 0, 64},
+    //    )
 
     vector.StrokeRect(screen,
         float32(screenX), float32(screenY),

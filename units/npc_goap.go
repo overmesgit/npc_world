@@ -2,6 +2,9 @@ package units
 
 import (
     "example.com/maj/ai"
+    gamemap "example.com/maj/map"
+    "example.com/maj/pathfinding"
+    "fmt"
     "github.com/solarlune/resolv"
     "math"
     "math/rand"
@@ -233,6 +236,7 @@ func (npc *Character) Wander() {
 
 func (npc *Character) RunToSafety() {
     // Find the furthest point from all monsters and move towards it
+    npc.TargetMonster = nil
     safePoint := FindSafePoint(npc.Object)
     npc.MoveTowards(safePoint)
 }
@@ -241,7 +245,7 @@ func (npc *Character) LookForMushroom() {
     // Find the nearest mushroom and move towards it
     nearestMushroom, _ := FindNearest(npc.Object, 32*6, "mushroom")
     if nearestMushroom != nil {
-        npc.MoveTowards(nearestMushroom.Center())
+        npc.MoveTowards(nearestMushroom.Position)
     }
 }
 
@@ -276,8 +280,19 @@ func (npc *Character) AttackDen() {
 }
 
 func (npc *Character) MoveTowards(target resolv.Vector) {
-    direction := target.Sub(npc.Object.Center()).Unit()
-    npc.Move(direction.X, direction.Y)
+    npcCenter := npc.Object.Position
+    startX, startY := npc.Object.Space.WorldToSpace(npcCenter.X, npcCenter.Y)
+
+    endX, endY := npc.Object.Space.WorldToSpace(target.X, target.Y)
+
+    path, _, _ := pathfinding.FindPath(npc.Object.Space, startX, startY, endX, endY)
+
+    if len(path) > 0 {
+        nextStep := path[0].(pathfinding.PathNode)
+        nextStepVector := resolv.Vector{float64(nextStep.X * gamemap.TileSize), float64(nextStep.Y * gamemap.TileSize)}
+        direction := nextStepVector.Sub(npcCenter).Unit()
+        npc.Move(direction.X, direction.Y)
+    }
 }
 
 func (npc *Character) MoveTowardsDen() {

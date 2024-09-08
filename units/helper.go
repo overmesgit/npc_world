@@ -8,8 +8,8 @@ import (
 func FindAll(source *resolv.Object, distance float64, tags ...string) []*resolv.Object {
     var nearestObjects []*resolv.Object
 
-    checkX := source.Center().X - distance
-    checkY := source.Center().Y - distance
+    checkX := source.Center().X - distance/2
+    checkY := source.Center().Y - distance/2
     checkSize := distance * 2
     nearbyObjects := source.Space.CheckWorld(
         checkX, checkY,
