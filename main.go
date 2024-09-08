@@ -4,6 +4,7 @@ import (
     "example.com/maj/game"
     "example.com/maj/units"
     "github.com/hajimehoshi/ebiten/v2/ebitenutil"
+    "github.com/hajimehoshi/ebiten/v2/inpututil"
     "github.com/solarlune/resolv"
     "log"
 
@@ -16,6 +17,7 @@ type Game struct {
     renderer     *game.Renderer
     inputHandler *game.InputHandler
     space        *resolv.Space
+    isPaused     bool
 }
 
 func NewGame() *Game {
@@ -50,9 +52,15 @@ func NewGame() *Game {
 }
 
 func (g *Game) Update() error {
-    g.inputHandler.HandleInput(g.world)
-    g.world.Update()
-    g.camera.Update(g.world.GetPlayerCharacter())
+    if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
+        g.isPaused = !g.isPaused
+    }
+
+    if !g.isPaused {
+        g.inputHandler.HandleInput(g.world)
+        g.world.Update()
+        g.camera.Update(g.world.GetPlayerCharacter())
+    }
     return nil
 }
 

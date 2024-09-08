@@ -57,29 +57,11 @@ func (m *Monster) Update() {
 }
 
 func (m *Monster) FindNearestCharacter() (*Character, float64) {
-    var nearestChar *Character
-    minDistance := math.Inf(1)
-
-    checkX := m.Object.Position.X - 3*m.Attack.Range
-    checkY := m.Object.Position.Y - 3*m.Attack.Range
-    checkSize := m.Attack.Range * 6
-    nearbyObjects := m.Object.Space.CheckWorld(checkX, checkY, checkSize, checkSize,
-        "character")
-
-    for _, obj := range nearbyObjects {
-        if obj == m.Object {
-            continue
-        }
-        if char, ok := obj.Data.(*Character); ok {
-            distance := char.Object.Center().Distance(m.Object.Center())
-            if distance < minDistance {
-                minDistance = distance
-                nearestChar = char
-            }
-        }
+    nearestObj, distance := FindNearest(m.Object, 2*m.Attack.Range, "character")
+    if nearestObj != nil {
+        return nearestObj.Data.(*Character), distance
     }
-
-    return nearestChar, minDistance
+    return nil, 0
 }
 
 func (m *Monster) WanderNearDen() {

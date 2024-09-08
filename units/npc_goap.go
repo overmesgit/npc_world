@@ -80,6 +80,10 @@ func InitNPCGOAP(npc *Character) {
 }
 
 func (npc *Character) UpdateGOAPState() ai.GOAPState {
+    if npc.TargetMonster != nil && npc.TargetMonster.Object.Space == nil {
+        npc.TargetMonster = nil
+    }
+
     state := ai.GOAPState{
         "lowHealth":       npc.Health < int(float32(npc.MaxHealth)*0.3),
         "hasFullHealth":   npc.Health == npc.MaxHealth,
@@ -156,18 +160,17 @@ func (npc *Character) IsInAttackRange() bool {
 }
 
 func (npc *Character) Wander() {
+    canMove := false
     if npc.WanderTime.After(time.Now()) {
-        npc.Move(npc.WanderTarget.X, npc.WanderTarget.Y)
-        return
+        canMove = npc.Move(npc.WanderTarget.X, npc.WanderTarget.Y)
     }
 
-    check := false
-    for !check {
+    for !canMove {
         angle := rand.Float64() * 2 * math.Pi
         direction := resolv.Vector{X: math.Cos(angle), Y: math.Sin(angle)}
         npc.WanderTime = time.Now().Add(time.Second * 5)
         npc.WanderTarget = direction
-        check = npc.Move(direction.X, direction.Y)
+        canMove = npc.Move(direction.X, direction.Y)
     }
 
 }

@@ -19,12 +19,12 @@ type GoblinDen struct {
 
 func NewGoblinDen(x, y float64) *GoblinDen {
     den := &GoblinDen{
-        SpawnCooldown:   time.Second * 10,
+        SpawnCooldown:   time.Second * 30,
         LastSpawnTime:   time.Now().Add(-time.Second * 8),
         MaxMonsters:     5,
         CurrentMonsters: 0,
-        Health:          100, // Add this line
-        MaxHealth:       100, // Add this line
+        Health:          100,
+        MaxHealth:       100,
     }
     size := float64(32)
     den.Object = resolv.NewObject(x, y, size, size)

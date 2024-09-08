@@ -37,7 +37,7 @@ func (ih *InputHandler) HandleInput(world *World) {
         speedMultiplier = 3.0
     }
 
-    if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
+    if inpututil.IsKeyJustPressed(ebiten.KeyE) {
         player.Take()
     }
 
