@@ -13,14 +13,15 @@ type GoblinDen struct {
     LastSpawnTime   time.Time
     MaxMonsters     int
     CurrentMonsters int
-    Health          int // Add this line
-    MaxHealth       int // Add this line
+    Health          int
+    MaxHealth       int
 }
 
-func NewGoblinDen(x, y float64) *GoblinDen {
+func NewGoblinDen(space *resolv.Space, x, y float64) *GoblinDen {
+    cooldown := time.Second * 30
     den := &GoblinDen{
-        SpawnCooldown:   time.Second * 30,
-        LastSpawnTime:   time.Now().Add(-time.Second * 8),
+        SpawnCooldown:   cooldown,
+        LastSpawnTime:   time.Now().Add(-cooldown),
         MaxMonsters:     5,
         CurrentMonsters: 0,
         Health:          100,
@@ -31,6 +32,7 @@ func NewGoblinDen(x, y float64) *GoblinDen {
     den.Object.SetShape(resolv.NewRectangle(0, 0, size, size))
     den.Object.AddTags("goblin_den", "mountain")
     den.Object.Data = den
+    space.Add(den.Object)
     return den
 }
 

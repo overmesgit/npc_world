@@ -2,10 +2,21 @@ package units
 
 import (
     "example.com/maj/ai"
+    "fmt"
     "github.com/solarlune/resolv"
     "math"
     "math/rand"
     "time"
+)
+
+const (
+    RunToSafety     = "RunToSafety"
+    LookForMushroom = "LookForMushroom"
+    TakeMushroom    = "TakeMushroom"
+    FindMonster     = "FindMonster"
+    MoveToTarget    = "MoveToTarget"
+    AttackMonster   = "AttackMonster"
+    Wander          = "Wander"
 )
 
 func InitNPCGOAP(npc *Character) {
@@ -13,7 +24,7 @@ func InitNPCGOAP(npc *Character) {
 
     // Run to safety action
     npc.Planner.AddAction(ai.GOAPAction{
-        Name: "RunToSafety",
+        Name: RunToSafety,
         CostFunc: func(state ai.GOAPState) float64 {
             return 1
         },
@@ -23,15 +34,15 @@ func InitNPCGOAP(npc *Character) {
 
     // Look for mushroom action
     npc.Planner.AddAction(ai.GOAPAction{
-        Name: "LookForMushroom",
+        Name: LookForMushroom,
         CostFunc: func(state ai.GOAPState) float64 {
             return 2
         },
-        Preconditions: ai.GOAPState{"inDanger": false},
+        Preconditions: ai.GOAPState{"seeMushroom": true},
         Effects:       ai.GOAPState{"mushroomNear": true},
     })
     npc.Planner.AddAction(ai.GOAPAction{
-        Name: "TakeMushroom",
+        Name: TakeMushroom,
         CostFunc: func(state ai.GOAPState) float64 {
             return 2
         },
@@ -41,7 +52,7 @@ func InitNPCGOAP(npc *Character) {
 
     // Find monster action
     npc.Planner.AddAction(ai.GOAPAction{
-        Name: "FindMonster",
+        Name: FindMonster,
         CostFunc: func(state ai.GOAPState) float64 {
             return 3
         },
@@ -50,7 +61,7 @@ func InitNPCGOAP(npc *Character) {
     })
 
     npc.Planner.AddAction(ai.GOAPAction{
-        Name: "MoveToTarget",
+        Name: MoveToTarget,
         CostFunc: func(state ai.GOAPState) float64 {
             return 3
         },
@@ -60,7 +71,7 @@ func InitNPCGOAP(npc *Character) {
 
     // Attack monster action
     npc.Planner.AddAction(ai.GOAPAction{
-        Name: "AttackMonster",
+        Name: AttackMonster,
         CostFunc: func(state ai.GOAPState) float64 {
             return 4
         },
@@ -69,12 +80,12 @@ func InitNPCGOAP(npc *Character) {
     })
 
     npc.Planner.AddAction(ai.GOAPAction{
-        Name: "Wander",
+        Name: Wander,
         CostFunc: func(state ai.GOAPState) float64 {
             return 6
         },
-        Preconditions: ai.GOAPState{"hasFullHealth": true, "monstersArround": false},
-        Effects:       ai.GOAPState{"monstersArround": true},
+        Preconditions: ai.GOAPState{},
+        Effects:       ai.GOAPState{"monstersArround": true, "seeMushroom": true},
     })
 
 }
@@ -91,7 +102,8 @@ func (npc *Character) UpdateGOAPState() ai.GOAPState {
         "hasTarget":       npc.HasTarget(),
         "inAttackRange":   npc.IsInAttackRange(),
         "monstersArround": npc.IsMonstersArround(),
-        "mushroomNear":    npc.IsMushroomNear(),
+        "mushroomNear":    npc.IsMushroomHere(),
+        "seeMushroom":     npc.IsMushroomNear(),
     }
     return state
 }
@@ -131,8 +143,14 @@ func (npc *Character) ExecuteGOAPAction(action ai.GOAPAction) {
     }
 }
 
+func (npc *Character) IsMushroomHere() bool {
+    _, distance := FindNearest(npc.Object, 32, "mushroom")
+    fmt.Println("distance", distance)
+    return distance < 16
+}
+
 func (npc *Character) IsMushroomNear() bool {
-    nearbyMonsters := FindAll(npc.Object, 4, "mushroom")
+    nearbyMonsters := FindAll(npc.Object, 6*32, "mushroom")
     return len(nearbyMonsters) > 0
 }
 

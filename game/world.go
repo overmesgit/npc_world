@@ -1,6 +1,7 @@
 package game
 
 import (
+    gamemap "example.com/maj/map"
     "example.com/maj/units"
     "github.com/hajimehoshi/ebiten/v2"
     "github.com/solarlune/resolv"
@@ -8,13 +9,8 @@ import (
     "time"
 )
 
-// Add new struct
-type Mushroom struct {
-    Object *resolv.Object
-}
-
 type World struct {
-    GameMap         *GameMap
+    GameMap         *gamemap.GameMap
     MonsterSprite   *ebiten.Image
     GoblinDenSprite *ebiten.Image
     Space           *resolv.Space
@@ -22,10 +18,10 @@ type World struct {
 }
 
 func NewWorld() *World {
-    gameMap := NewGameMap()
+    gameMap := gamemap.NewGameMap()
     w := &World{
         GameMap: gameMap,
-        Space:   resolv.NewSpace(gameMap.Width*TileSize, gameMap.Height*TileSize, TileSize, TileSize),
+        Space:   resolv.NewSpace(gameMap.Width*gamemap.TileSize, gameMap.Height*gamemap.TileSize, gamemap.TileSize, gamemap.TileSize),
     }
     w.initializeCollisionSpace()
     w.spawnGoblinDens(10)
@@ -62,12 +58,7 @@ func (w *World) Update() {
 func (w *World) spawnMushrooms(count int) {
     for i := 0; i < count; i++ {
         x, y := w.findValidSpawnPoint()
-        mushroom := &Mushroom{
-            Object: resolv.NewObject(float64(x*TileSize), float64(y*TileSize), float64(TileSize), float64(TileSize)),
-        }
-        mushroom.Object.AddTags("mushroom")
-        mushroom.Object.Data = mushroom
-        w.Space.Add(mushroom.Object)
+        units.NewMushroom(w.Space, float64(x*gamemap.TileSize), float64(y*gamemap.TileSize))
     }
 }
 
@@ -81,8 +72,7 @@ func (w *World) mushroomSpawnRoutine() {
 func (w *World) spawnGoblinDens(count int) {
     for i := 0; i < count; i++ {
         x, y := w.findValidSpawnPoint()
-        den := units.NewGoblinDen(float64(x*TileSize), float64(y*TileSize))
-        w.Space.Add(den.Object)
+        units.NewGoblinDen(w.Space, float64(x*gamemap.TileSize), float64(y*gamemap.TileSize))
     }
 }
 
@@ -100,9 +90,9 @@ func (w *World) findValidSpawnPoint() (int, int) {
 func (w *World) initializeCollisionSpace() {
     for y := 0; y < w.GameMap.Height; y++ {
         for x := 0; x < w.GameMap.Width; x++ {
-            if w.GameMap.Tiles[y][x] == TileMountain {
-                obj := resolv.NewObject(float64(x*TileSize), float64(y*TileSize), float64(TileSize), float64(TileSize))
-                obj.SetShape(resolv.NewRectangle(0, 0, float64(TileSize), float64(TileSize)))
+            if w.GameMap.Tiles[y][x] == gamemap.TileMountain {
+                obj := resolv.NewObject(float64(x*gamemap.TileSize), float64(y*gamemap.TileSize), float64(gamemap.TileSize), float64(gamemap.TileSize))
+                obj.SetShape(resolv.NewRectangle(0, 0, float64(gamemap.TileSize), float64(gamemap.TileSize)))
                 obj.AddTags("mountain")
                 w.Space.Add(obj)
             }

@@ -2,6 +2,7 @@ package main
 
 import (
     "example.com/maj/game"
+    gamemap "example.com/maj/map"
     "example.com/maj/units"
     "github.com/hajimehoshi/ebiten/v2/ebitenutil"
     "github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -23,8 +24,8 @@ type Game struct {
 func NewGame() *Game {
 
     world := game.NewWorld()
-    world.AddCharacter(units.NewCharacter(float64(3*game.TileSize), float64(3*game.TileSize), "Player"))
-    world.AddCharacter(units.NewCharacter(float64(4*game.TileSize), float64(4*game.TileSize), "NPC1"))
+    world.AddCharacter(units.NewCharacter(float64(3*gamemap.TileSize), float64(3*gamemap.TileSize), "Player"))
+    world.AddCharacter(units.NewCharacter(float64(4*gamemap.TileSize), float64(4*gamemap.TileSize), "NPC1"))
 
     chars, _, err := ebitenutil.NewImageFromFile("assets/rogues.png")
     if err != nil {
