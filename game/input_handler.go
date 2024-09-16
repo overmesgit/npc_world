@@ -3,6 +3,7 @@ package game
 import (
     "github.com/hajimehoshi/ebiten/v2"
     "github.com/hajimehoshi/ebiten/v2/inpututil"
+    "github.com/solarlune/resolv"
 )
 
 type InputHandler struct{}
@@ -32,16 +33,17 @@ func (ih *InputHandler) HandleInput(world *World) {
         dy += 1
     }
 
-    speedMultiplier := 1.0
     if ebiten.IsKeyPressed(ebiten.KeyShift) {
-        speedMultiplier = 3.0
+        player.Speed = 8
+    } else {
+        player.Speed = 2
     }
 
     if inpututil.IsKeyJustPressed(ebiten.KeyE) {
         player.Take()
     }
 
-    player.Move(dx*speedMultiplier, dy*speedMultiplier)
+    player.Move(resolv.NewVector(dx, dy))
 
     // Handle attack input
     if inpututil.IsKeyJustPressed(ebiten.KeyControl) {

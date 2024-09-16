@@ -26,7 +26,7 @@ func TestNPCBehaviors(t *testing.T) {
     })
 
     t.Run("Test LookForMushroom", func(t *testing.T) {
-        mushroom := NewMushroom(space, 120, 120)
+        mushroom := NewMushroom(space, 96, 96)
 
         before := npc.Object.Center().Distance(mushroom.Object.Center())
         npc.LookForMushroom()
@@ -35,6 +35,22 @@ func TestNPCBehaviors(t *testing.T) {
         if after > before {
             t.Errorf("Expected NPC to move towards mushroom before: %v after: %v ", before, after)
         }
+
+    })
+
+    t.Run("Test LookForMushroom", func(t *testing.T) {
+        mushroom := NewMushroom(space, 128, 128)
+
+        for i := 0; i < 30; i++ {
+            before := npc.Object.Center().Distance(mushroom.Object.Center())
+            npc.LookForMushroom()
+            after := npc.Object.Center().Distance(mushroom.Object.Center())
+
+            if npc.Object.Center() != mushroom.Object.Center() && after > before {
+                t.Errorf("Iter %v Expected NPC to move towards mushroom before: %v after: %v ", i, before, after)
+            }
+        }
+
     })
 
 }

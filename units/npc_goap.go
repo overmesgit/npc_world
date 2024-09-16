@@ -4,7 +4,6 @@ import (
     "example.com/maj/ai"
     gamemap "example.com/maj/map"
     "example.com/maj/pathfinding"
-    "fmt"
     "github.com/solarlune/resolv"
     "math"
     "math/rand"
@@ -32,8 +31,8 @@ func InitNPCGOAP(npc *Character) {
         CostFunc: func(state ai.GOAPState) float64 {
             return 1
         },
-        Preconditions: ai.GOAPState{"lowHealth": true, "inDanger": true},
-        Effects:       ai.GOAPState{"inDanger": false},
+        Preconditions: ai.GOAPState{"lowHealth": true, "monstersArround": true},
+        Effects:       ai.GOAPState{"inDanger": false, "monstersArround": false},
     })
 
     // Look for mushroom action
@@ -221,7 +220,7 @@ func (npc *Character) DenInAttackRange() bool {
 func (npc *Character) Wander() {
     canMove := false
     if npc.WanderTime.After(time.Now()) {
-        canMove = npc.Move(npc.WanderTarget.X, npc.WanderTarget.Y)
+        canMove = npc.Move(npc.WanderTarget)
     }
 
     for !canMove {
@@ -229,7 +228,7 @@ func (npc *Character) Wander() {
         direction := resolv.Vector{X: math.Cos(angle), Y: math.Sin(angle)}
         npc.WanderTime = time.Now().Add(time.Second * 5)
         npc.WanderTarget = direction
-        canMove = npc.Move(direction.X, direction.Y)
+        canMove = npc.Move(direction)
     }
 
 }
@@ -245,7 +244,7 @@ func (npc *Character) LookForMushroom() {
     // Find the nearest mushroom and move towards it
     nearestMushroom, _ := FindNearest(npc.Object, 32*6, "mushroom")
     if nearestMushroom != nil {
-        npc.MoveTowards(nearestMushroom.Position)
+        npc.MoveTowards(nearestMushroom.Center())
     }
 }
 
@@ -280,7 +279,7 @@ func (npc *Character) AttackDen() {
 }
 
 func (npc *Character) MoveTowards(target resolv.Vector) {
-    npcCenter := npc.Object.Position
+    npcCenter := npc.Object.Center()
     startX, startY := npc.Object.Space.WorldToSpace(npcCenter.X, npcCenter.Y)
 
     endX, endY := npc.Object.Space.WorldToSpace(target.X, target.Y)
@@ -289,9 +288,9 @@ func (npc *Character) MoveTowards(target resolv.Vector) {
 
     if len(path) > 0 {
         nextStep := path[0].(pathfinding.PathNode)
-        nextStepVector := resolv.Vector{float64(nextStep.X * gamemap.TileSize), float64(nextStep.Y * gamemap.TileSize)}
-        direction := nextStepVector.Sub(npcCenter).Unit()
-        npc.Move(direction.X, direction.Y)
+        halfCell := resolv.Vector{float64(gamemap.TileSize / 2), float64(gamemap.TileSize / 2)}
+        target := npc.Object.Space.SpaceToWorldVec(nextStep.X, nextStep.Y).Add(halfCell)
+        npc.MoveToPoint(target)
     }
 }
 
@@ -299,6 +298,6 @@ func (npc *Character) MoveTowardsDen() {
     denObj, _ := FindNearest(npc.Object, 6*32, "goblin_den")
     if denObj != nil {
         direction := denObj.Center().Sub(npc.Object.Center()).Unit()
-        npc.Move(direction.X, direction.Y)
+        npc.Move(direction)
     }
 }

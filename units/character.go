@@ -4,7 +4,6 @@ import (
     "example.com/maj/ai"
     "fmt"
     "github.com/solarlune/resolv"
-    "math"
     "time"
 )
 
@@ -47,19 +46,23 @@ func NewCharacter(x, y float64, name string) *Character {
     return c
 }
 
-func (c *Character) Move(dx, dy float64) bool {
-    if dx != 0 && dy != 0 {
-        magnitude := math.Sqrt(dx*dx + dy*dy)
-        dx /= magnitude
-        dy /= magnitude
+func (c *Character) MoveToPoint(target resolv.Vector) bool {
+    if c.Object.Center().Distance(target) <= c.Speed {
+        c.Object.Position = target.Sub(c.Object.Center().Sub(c.Object.Position))
+        c.Object.Update()
+        return true
     }
 
-    newX := c.Object.Position.X + dx*c.Speed
-    newY := c.Object.Position.Y + dy*c.Speed
+    direction := target.Sub(c.Object.Center()).Unit()
+    return c.Move(direction)
+}
 
-    if collision := c.Object.Check(dx*c.Speed, dy*c.Speed, "mountain"); collision == nil {
-        c.Object.Position.X = newX
-        c.Object.Position.Y = newY
+func (c *Character) Move(direction resolv.Vector) bool {
+    direction = direction.Unit()
+
+    step := direction.Mult(resolv.NewVector(c.Speed, c.Speed))
+    if collision := c.Object.Check(step.X, step.Y, "mountain"); collision == nil {
+        c.Object.Position = c.Object.Position.Add(step)
         c.Object.Update()
         return true
     } else {
