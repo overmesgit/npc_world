@@ -32,7 +32,7 @@ func InitNPCGOAP(npc *Character) {
             return 1
         },
         Preconditions: ai.GOAPState{"lowHealth": true, "monstersArround": true},
-        Effects:       ai.GOAPState{"inDanger": false, "monstersArround": false},
+        Effects:       ai.GOAPState{"inDanger": false},
     })
 
     // Look for mushroom action
@@ -237,7 +237,11 @@ func (npc *Character) RunToSafety() {
     // Find the furthest point from all monsters and move towards it
     npc.TargetMonster = nil
     safePoint := FindSafePoint(npc.Object)
-    npc.MoveTowards(safePoint)
+    if safePoint == npc.Object.Center() {
+        npc.Wander()
+    } else {
+        npc.MoveTowards(safePoint)
+    }
 }
 
 func (npc *Character) LookForMushroom() {
@@ -286,12 +290,27 @@ func (npc *Character) MoveTowards(target resolv.Vector) {
 
     path, _, _ := pathfinding.FindPath(npc.Object.Space, startX, startY, endX, endY)
 
-    if len(path) > 0 {
-        nextStep := path[0].(pathfinding.PathNode)
-        halfCell := resolv.Vector{float64(gamemap.TileSize / 2), float64(gamemap.TileSize / 2)}
-        target := npc.Object.Space.SpaceToWorldVec(nextStep.X, nextStep.Y).Add(halfCell)
-        npc.MoveToPoint(target)
+    if len(path) == 0 {
+        return
     }
+
+    lastStep := path[len(path)-1].(pathfinding.PathNode)
+    lastStepWorld := npc.Object.Space.SpaceToWorldVec(lastStep.X, lastStep.Y)
+    nextTarget := lastStepWorld
+    if len(path) > 1 {
+        secondLastStep := path[len(path)-2].(pathfinding.PathNode)
+        secondLastStepWorld := npc.Object.Space.SpaceToWorldVec(secondLastStep.X, secondLastStep.Y)
+
+        // Check if NPC has surpassed the last target
+        if npc.Object.Position.Distance(secondLastStepWorld) <= 32 {
+            nextTarget = secondLastStepWorld
+        }
+
+    }
+
+    halfCell := resolv.Vector{X: float64(gamemap.TileSize / 2), Y: float64(gamemap.TileSize / 2)}
+    nextTarget = nextTarget.Add(halfCell)
+    npc.MoveToPoint(nextTarget)
 }
 
 func (npc *Character) MoveTowardsDen() {

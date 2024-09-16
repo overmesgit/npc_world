@@ -61,7 +61,7 @@ func (c *Character) Move(direction resolv.Vector) bool {
     direction = direction.Unit()
 
     step := direction.Mult(resolv.NewVector(c.Speed, c.Speed))
-    if collision := c.Object.Check(step.X, step.Y, "mountain"); collision == nil {
+    if collision := c.Object.Check(step.X, step.Y, "mountain", "goblin_den"); collision == nil {
         c.Object.Position = c.Object.Position.Add(step)
         c.Object.Update()
         return true

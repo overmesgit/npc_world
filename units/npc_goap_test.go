@@ -1,6 +1,7 @@
 package units
 
 import (
+    gamemap "example.com/maj/map"
     "fmt"
     "github.com/solarlune/resolv"
     "github.com/stretchr/testify/assert"
@@ -8,24 +9,20 @@ import (
 )
 
 func TestNPCBehaviors(t *testing.T) {
-    space := resolv.NewSpace(1000, 1000, 32, 32)
-    npc := NewCharacter(100, 100, "TestNPC")
-    space.Add(npc.Object)
-    InitNPCGOAP(npc)
 
     t.Run("Test RunToSafety", func(t *testing.T) {
+        space, npc := InitSpace(100, 100)
         initialPos := npc.Object.Position
         monster := NewMonster(120, 120, nil)
         space.Add(monster.Object)
 
         npc.RunToSafety()
 
-        if npc.Object.Position == initialPos {
-            t.Errorf("Expected NPC to move away from danger")
-        }
+        assert.NotEqual(t, npc.Object.Position, initialPos, "Expected NPC to move away from danger")
     })
 
-    t.Run("Test LookForMushroom", func(t *testing.T) {
+    t.Run("Test LookForMushroom Single step", func(t *testing.T) {
+        space, npc := InitSpace(100, 100)
         mushroom := NewMushroom(space, 96, 96)
 
         before := npc.Object.Center().Distance(mushroom.Object.Center())
@@ -38,7 +35,8 @@ func TestNPCBehaviors(t *testing.T) {
 
     })
 
-    t.Run("Test LookForMushroom", func(t *testing.T) {
+    t.Run("Test LookForMushroom Multiple steps", func(t *testing.T) {
+        space, npc := InitSpace(100, 100)
         mushroom := NewMushroom(space, 128, 128)
 
         for i := 0; i < 30; i++ {
@@ -46,6 +44,7 @@ func TestNPCBehaviors(t *testing.T) {
             npc.LookForMushroom()
             after := npc.Object.Center().Distance(mushroom.Object.Center())
 
+            fmt.Println(npc.Object.Center(), mushroom.Object.Center())
             if npc.Object.Center() != mushroom.Object.Center() && after > before {
                 t.Errorf("Iter %v Expected NPC to move towards mushroom before: %v after: %v ", i, before, after)
             }
@@ -53,15 +52,52 @@ func TestNPCBehaviors(t *testing.T) {
 
     })
 
+    t.Run("Test Go arround obsticles", func(t *testing.T) {
+        // 2, 2 cell
+        space, npc := InitSpace(64, 64)
+        // 4, 4 cell
+        mushroom := NewMushroom(space, 128, 128)
+        // 3, 3 cell
+        NewMountain(space, 96, 96)
+
+        res := CheckWorld(space, 100, 100, 32, 32)
+        assert.True(t, len(res) > 0, "Can't find mountain as obsticle")
+        for i := 0; i < 40; i++ {
+            before := npc.Object.Center().Distance(mushroom.Object.Center())
+            npc.LookForMushroom()
+            after := npc.Object.Center().Distance(mushroom.Object.Center())
+
+            fmt.Println(npc.Object.Center(), mushroom.Object.Center())
+            if npc.Object.Center() != mushroom.Object.Center() {
+                break
+            }
+            assert.Truef(t, after > before, "Iter %v Expected NPC to move towards mushroom before: %v after: %v ", i, before, after)
+        }
+        assert.Equal(t, npc.Object.Center(), mushroom.Object.Center())
+
+    })
+
 }
 
-func TestGOAP_NPCBehaviors(t *testing.T) {
+func NewMountain(space *resolv.Space, x, y float64) {
+    size := float64(gamemap.TileSize)
+    obj := resolv.NewObject(x, y, size, size)
+    obj.SetShape(resolv.NewRectangle(0, 0, size, size))
+    obj.AddTags("mountain")
+    space.Add(obj)
+}
+
+func InitSpace(x, y float64) (*resolv.Space, *Character) {
     space := resolv.NewSpace(1000, 1000, 32, 32)
-    npc := NewCharacter(100, 100, "TestNPC")
+    npc := NewCharacter(x, y, "TestNPC")
     space.Add(npc.Object)
     InitNPCGOAP(npc)
+    return space, npc
+}
 
-    t.Run("Test LookForMushroom", func(t *testing.T) {
+func Test_GOAPBehaviors(t *testing.T) {
+    t.Run("Test Plan LookForMushroom", func(t *testing.T) {
+        space, npc := InitSpace(100, 100)
         mushroom := NewMushroom(space, 120, 120)
         npc.Health = 80
         before := npc.Object.Center().Distance(mushroom.Object.Center())

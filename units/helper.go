@@ -1,6 +1,7 @@
 package units
 
 import (
+    gamemap "example.com/maj/map"
     "github.com/solarlune/resolv"
     "math"
 )
@@ -66,4 +67,14 @@ func FindSafePoint(source *resolv.Object) resolv.Vector {
     //    safePoint.Y = math.Max(0, math.Min(safePoint.Y, float64(w.GameMap.Height*32)))
 
     return safePoint
+}
+
+func CheckWorld(space *resolv.Space, x, y float64, w, h float64) []*resolv.Object {
+    if int(x)/gamemap.TileSize != int(x+w)/gamemap.TileSize && int(x+w)%gamemap.TileSize != 0 {
+        w += gamemap.TileSize
+    }
+    if int(y)/gamemap.TileSize != int(y+h)/gamemap.TileSize && int(y+h)%gamemap.TileSize != 0 {
+        h += gamemap.TileSize
+    }
+    return space.CheckWorld(x, y, w, h)
 }
