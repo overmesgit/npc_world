@@ -121,4 +121,35 @@ func Test_GOAPBehaviors(t *testing.T) {
         assert.Truef(t, after < before, "Expected NPC to move towards mushroom before: %v after: %v ", before, after)
     })
 
+    t.Run("Test run away from enemy", func(t *testing.T) {
+        space, npc := InitSpace(100, 160)
+        monster := NewMonster(100, 100, nil)
+        space.Add(monster.Object)
+
+        npc.Health = 20
+
+        for i := range 80 {
+            before := npc.Object.Center().Distance(monster.Object.Center())
+
+            currentState := npc.UpdateGOAPState()
+            goalState := npc.GenerateGOAPGoal(currentState)
+
+            fmt.Println(currentState, goalState)
+            npc.CurrentPlan = npc.Planner.Plan(currentState, goalState)
+            assert.NotNil(t, npc.CurrentPlan, "Current plan is nil")
+
+            action := npc.CurrentPlan[0]
+            fmt.Println(npc.Name, action, npc.Object.Center())
+            npc.ExecuteGOAPAction(action)
+
+            after := npc.Object.Center().Distance(monster.Object.Center())
+
+            assert.Equal(t, RunToSafety, action.Name)
+            assert.Truef(t, after > before, "Iter %v Expected NPC to run from monster: %v after: %v ", i, before, after)
+            if after >= gamemap.TileSize*3 {
+                break
+            }
+        }
+    })
+
 }

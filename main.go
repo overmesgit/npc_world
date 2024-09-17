@@ -66,6 +66,15 @@ func (g *Game) Update() error {
         g.world.Update()
         g.camera.Update(g.world.GetPlayerCharacter())
     }
+
+    if inpututil.IsKeyJustPressed(ebiten.Key1) {
+        ebiten.SetTPS(60)
+    }
+
+    if inpututil.IsKeyJustPressed(ebiten.Key2) {
+        ebiten.SetTPS(120)
+    }
+
     return nil
 }
 

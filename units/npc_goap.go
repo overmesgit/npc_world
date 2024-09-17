@@ -195,7 +195,7 @@ func (npc *Character) IsMonstersArround() bool {
 }
 
 func (npc *Character) IsInDanger() bool {
-    nearbyMonsters := FindAll(npc.Object, 4*32, "monster")
+    nearbyMonsters := FindAll(npc.Object, 6*32, "monster")
     return len(nearbyMonsters) > 0
 }
 
