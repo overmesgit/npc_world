@@ -36,7 +36,7 @@ func TestNPCBehaviors(t *testing.T) {
     })
 
     t.Run("Test LookForMushroom Multiple steps", func(t *testing.T) {
-        space, npc := InitSpace(100, 100)
+        space, npc := InitSpace(96, 96)
         mushroom := NewMushroom(space, 128, 128)
 
         for i := 0; i < 30; i++ {
@@ -45,16 +45,21 @@ func TestNPCBehaviors(t *testing.T) {
             after := npc.Object.Center().Distance(mushroom.Object.Center())
 
             fmt.Println(npc.Object.Center(), mushroom.Object.Center())
-            if npc.Object.Center() != mushroom.Object.Center() && after > before {
-                t.Errorf("Iter %v Expected NPC to move towards mushroom before: %v after: %v ", i, before, after)
+            if npc.Object.Center() == mushroom.Object.Center() {
+                break
             }
+            assert.Truef(t, after < before, "Iter %v Expected NPC to move towards mushroom before: %v after: %v ", i, before, after)
         }
+        assert.Equal(t, npc.Object.Center(), mushroom.Object.Center(), "NPS didn't come to the mushroom")
 
     })
 
     t.Run("Test Go arround obsticles", func(t *testing.T) {
+        // ##.##
+        // ###M#
+        // ####G
         // 2, 2 cell
-        space, npc := InitSpace(64, 64)
+        space, npc := InitSpace(112, 64)
         // 4, 4 cell
         mushroom := NewMushroom(space, 128, 128)
         // 3, 3 cell
@@ -62,18 +67,18 @@ func TestNPCBehaviors(t *testing.T) {
 
         res := CheckWorld(space, 100, 100, 32, 32)
         assert.True(t, len(res) > 0, "Can't find mountain as obsticle")
-        for i := 0; i < 40; i++ {
+        for i := 0; i < 70; i++ {
             before := npc.Object.Center().Distance(mushroom.Object.Center())
             npc.LookForMushroom()
             after := npc.Object.Center().Distance(mushroom.Object.Center())
 
             fmt.Println(npc.Object.Center(), mushroom.Object.Center())
-            if npc.Object.Center() != mushroom.Object.Center() {
+            if npc.Object.Center() == mushroom.Object.Center() {
                 break
             }
-            assert.Truef(t, after > before, "Iter %v Expected NPC to move towards mushroom before: %v after: %v ", i, before, after)
+            assert.Truef(t, after < before, "Iter %v Expected NPC to move towards mushroom before: %v after: %v ", i, before, after)
         }
-        assert.Equal(t, npc.Object.Center(), mushroom.Object.Center())
+        assert.Equal(t, npc.Object.Center(), mushroom.Object.Center(), "NPS didn't come to the mushroom")
 
     })
 

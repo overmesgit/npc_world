@@ -12,14 +12,37 @@ type PathNode struct {
 }
 
 func (n PathNode) PathNeighbors() []astar.Pather {
-    neighbors := []astar.Pather{}
-    directions := []struct{ dx, dy int }{
-        {-1, 0}, {1, 0}, {0, -1}, {0, 1}, // Horizontal and vertical
-//        {-1, -1}, {1, -1}, {-1, 1}, {1, 1}, // Diagonal
+    var neighbors []astar.Pather
+    straight := []struct{ dx, dy int }{
+        {-1, 0}, {1, 0}, {0, -1}, {0, 1},
+    }
+    checks := [4]bool{}
+
+    for i, dir := range straight {
+        newX, newY := n.X+dir.dx, n.Y+dir.dy
+        if newCell := n.space.Cell(newX, newY); newCell != nil && !newCell.ContainsTags("goblin_den", "mountain") {
+            neighbors = append(neighbors, PathNode{X: newX, Y: newY, space: n.space})
+            checks[i] = true
+        }
     }
 
-    for _, dir := range directions {
+    diagonal := []struct {
+        dx, dy int
+        req    []int
+    }{
+        {-1, -1, []int{0, 2}},
+        {1, -1, []int{2, 1}},
+        {-1, 1, []int{0, 3}},
+        {1, 1, []int{1, 3}},
+    }
+outer:
+    for _, dir := range diagonal {
         newX, newY := n.X+dir.dx, n.Y+dir.dy
+        for _, r := range dir.req {
+            if !checks[r] {
+                continue outer
+            }
+        }
         if newCell := n.space.Cell(newX, newY); newCell != nil && !newCell.ContainsTags("goblin_den", "mountain") {
             neighbors = append(neighbors, PathNode{X: newX, Y: newY, space: n.space})
         }

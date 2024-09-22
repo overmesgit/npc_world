@@ -300,9 +300,8 @@ func (npc *Character) MoveTowards(target resolv.Vector) {
     if len(path) > 1 {
         secondLastStep := path[len(path)-2].(pathfinding.PathNode)
         secondLastStepWorld := npc.Object.Space.SpaceToWorldVec(secondLastStep.X, secondLastStep.Y)
-
         // Check if NPC has surpassed the last target
-        if npc.Object.Position.Distance(secondLastStepWorld) <= 32 {
+        if checkIfPassed(npc.Object.Position, lastStepWorld, secondLastStepWorld) {
             nextTarget = secondLastStepWorld
         }
 
@@ -311,6 +310,16 @@ func (npc *Character) MoveTowards(target resolv.Vector) {
     halfCell := resolv.Vector{X: float64(gamemap.TileSize / 2), Y: float64(gamemap.TileSize / 2)}
     nextTarget = nextTarget.Add(halfCell)
     npc.MoveToPoint(nextTarget)
+}
+
+func checkIfPassed(position, vecStep1, vecStep2 resolv.Vector) bool {
+    if vecStep1.X == vecStep2.X || vecStep1.Y == vecStep2.Y {
+        return position.Distance(vecStep2) <= gamemap.TileSize
+    }
+
+    dx := math.Abs(position.X - vecStep2.X)
+    dy := math.Abs(position.Y - vecStep2.Y)
+    return dx+dy <= gamemap.TileSize*2
 }
 
 func (npc *Character) MoveTowardsDen() {
